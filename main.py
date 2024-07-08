@@ -1,6 +1,7 @@
 import pygame
 from board import Board
 from board_view import BoardView
+from hold_view import HoldView
 from queue_view import QueueView
 
 FPS = 60
@@ -29,6 +30,8 @@ def main():
                     board.turn_clockwise()
                     board.fall_move_dt += 1
                     board.fall_dt = 0
+                if event.key == pygame.K_c:
+                    board.swap()
                 if event.key == pygame.K_LEFT:
                     board.move_left()
                     board.fall_move_dt += 1
@@ -41,8 +44,10 @@ def main():
         screen.fill("grey")
         board_surface = BoardView.render(board)
         queue_surface = QueueView.render(board.queue, TILE_SIZE)
+        hold_surface = HoldView.render(board.hold_piece, TILE_SIZE)
         screen.blit(board_surface, (100, 100))
         screen.blit(queue_surface, (100 + Board.TILE_SIZE + board_surface.get_width(), 100))
+        screen.blit(hold_surface, (0, 0))
         pygame.display.flip()
 
         board.update(dt)

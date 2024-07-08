@@ -1,5 +1,6 @@
 import copy
 from utils import Vec2
+from tetromino import Tetromino
 from tetromino_queue import TetrominoQueue
 
 import pygame
@@ -20,9 +21,11 @@ class Board:
         self.matrix = [[None for _ in range(Board.WIDTH)] for _ in range(Board.HEIGHT)]
         self.queue = TetrominoQueue()
 
+        self.hold_piece = None
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
+        self.did_swap_current_piece = False
         self.fall_dt = 0
         self.move_count_fall = 0
         self.fall_move_dt = 0
@@ -98,6 +101,25 @@ class Board:
             self.current = tetromino_copy
             self.move_count_fall += 1
 
+    def swap(self):
+        if self.did_swap_current_piece:
+            return
+
+        self.did_swap_current_piece = True
+
+        if self.hold_piece is None:
+            self.hold_piece = self.current.type
+            self.current = self.queue.next()
+            self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
+        else:
+            temp = self.hold_piece
+            self.hold_piece = self.current.type
+            self.current = Tetromino.fromType(temp)
+            self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
+
+        self.fall_dt = 0
+        self.fall_move_dt = 0
+
     def soft_drop(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
@@ -148,6 +170,7 @@ class Board:
 
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
+        self.did_swap_current_piece = False
 
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
