@@ -39,8 +39,10 @@ def main():
                     board.soft_drop()
 
         screen.fill("grey")
-        screen.blit(BoardView.render(board), (100, 100))
-        screen.blit(QueueView.render(board.queue, TILE_SIZE), (0, 0))
+        board_surface = BoardView.render(board)
+        queue_surface = QueueView.render(board.queue, TILE_SIZE)
+        screen.blit(board_surface, (100, 100))
+        screen.blit(queue_surface, (100 + Board.TILE_SIZE + board_surface.get_width(), 100))
         pygame.display.flip()
 
         board.update(dt)
