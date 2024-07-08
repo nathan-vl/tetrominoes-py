@@ -16,6 +16,7 @@ class QueueView:
         total_height = queue.VISIBLE_QUEUE_COUNT * tile_size * QueueView.TETROMINO_MAX_OCCUPY_HEIGHT
 
         surface = pygame.Surface((total_width, total_height))
+        surface.fill("black")
 
         pieces = queue.current_queue()
         for i in range(queue.VISIBLE_QUEUE_COUNT):

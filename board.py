@@ -186,3 +186,14 @@ class Board:
             if tile is None:
                 return False
         return True
+
+    def ghost_current(self):
+        copy_tetromino = copy.deepcopy(self.current)
+        color = pygame.Color(self.current.color)
+        color.a = 150
+        copy_tetromino.color = color
+        while True:
+            if self.check_collision(copy_tetromino):
+                copy_tetromino.move_relative(Vec2(0, -1))
+                return copy_tetromino
+            copy_tetromino.move_relative(Vec2(0, 1))

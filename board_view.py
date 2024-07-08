@@ -9,11 +9,13 @@ class BoardView:
             (
                 Board.WIDTH * Board.TILE_SIZE,
                 Board.HEIGHT * Board.TILE_SIZE,
-            )
+            ),
+            pygame.SRCALPHA
         )
 
         surface.fill("black")
         BoardView.render_pieces(board, surface)
+        BoardView.render_ghost(surface, board)
         TetrominoView.render(board.current, surface, Board.TILE_SIZE)
 
         BoardView.render_vertical_gridlines(surface)
@@ -56,3 +58,8 @@ class BoardView:
                 (i * Board.TILE_SIZE, 0),
                 (i * Board.TILE_SIZE, Board.HEIGHT * Board.TILE_SIZE),
             )
+
+    @staticmethod
+    def render_ghost(surface, board):
+        ghost = board.ghost_current()
+        TetrominoView.render(ghost, surface, Board.TILE_SIZE)
