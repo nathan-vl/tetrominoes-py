@@ -1,7 +1,6 @@
 import copy
-import random
-from tetromino import Tetromino
 from utils import Vec2
+from tetromino_queue import TetrominoQueue
 
 import pygame
 
@@ -17,29 +16,17 @@ class Board:
     LOCK_DELAY_MS = 500
     MOVE_LOCK_DELAY_LIMIT = 15
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.matrix = [[None for _ in range(Board.WIDTH)] for _ in range(Board.HEIGHT)]
-        self.tetrominoes_stack = Board.new_tetrominoes()
+        self.queue = TetrominoQueue()
 
-        self.current = self.tetrominoes_stack.pop()
+        self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
         self.fall_dt = 0
         self.move_count_fall = 0
         self.fall_move_dt = 0
         self.last_tick_ms = 0
-
-    def new_tetrominoes():
-        TETROMINOES = [
-            Tetromino.I(),
-            Tetromino.J(),
-            Tetromino.L(),
-            Tetromino.O(),
-            Tetromino.S(),
-            Tetromino.T(),
-            Tetromino.Z(),
-        ]
-        return random.sample(TETROMINOES, k=len(TETROMINOES))
 
     def turn_anticlockwise(self):
         tetromino_copy = copy.deepcopy(self.current)
@@ -159,9 +146,7 @@ class Board:
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
-        if len(self.tetrominoes_stack) == 0:
-            self.tetrominoes_stack = Board.new_tetrominoes()
-        self.current = self.tetrominoes_stack.pop()
+        self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
     def clear_rows(self):

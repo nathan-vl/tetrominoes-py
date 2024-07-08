@@ -1,6 +1,7 @@
 import pygame
 from board import Board
 from board_view import BoardView
+from queue_view import QueueView
 
 FPS = 60
 TILE_SIZE = 20
@@ -39,6 +40,7 @@ def main():
 
         screen.fill("grey")
         screen.blit(BoardView.render(board), (100, 100))
+        screen.blit(QueueView.render(board.queue, TILE_SIZE), (0, 0))
         pygame.display.flip()
 
         board.update(dt)

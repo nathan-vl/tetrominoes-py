@@ -21,6 +21,23 @@ class Tetromino:
     color: str
     type: TetrominoType
 
+    @staticmethod
+    def fromType(type):
+        if type == TetrominoType.I:
+            return Tetromino.__I()
+        if type == TetrominoType.J:
+            return Tetromino.__J()
+        if type == TetrominoType.L:
+            return Tetromino.__L()
+        if type == TetrominoType.O:
+            return Tetromino.__O()
+        if type == TetrominoType.S:
+            return Tetromino.__S()
+        if type == TetrominoType.T:
+            return Tetromino.__T()
+        if type == TetrominoType.Z:
+            return Tetromino.__Z()
+
     def turn_clockwise(self):
         for i, pos in enumerate(self.positions):
             pos -= self.origin
@@ -71,7 +88,7 @@ class Tetromino:
             self.move_relative(Vec2(width - max_x - 1, 0))
 
     @staticmethod
-    def I():
+    def __I():
         return Tetromino(
             Vec2(1.5, 1.5),
             [Vec2(0, 1), Vec2(1, 1), Vec2(2, 1), Vec2(3, 1)],
@@ -80,7 +97,7 @@ class Tetromino:
         )
 
     @staticmethod
-    def J():
+    def __J():
         return Tetromino(
             Vec2(1, 1),
             [Vec2(0, 0), Vec2(0, 1), Vec2(1, 1), Vec2(2, 1)],
@@ -89,7 +106,7 @@ class Tetromino:
         )
 
     @staticmethod
-    def L():
+    def __L():
         return Tetromino(
             Vec2(1, 1),
             [Vec2(2, 0), Vec2(0, 1), Vec2(1, 1), Vec2(2, 1)],
@@ -98,7 +115,7 @@ class Tetromino:
         )
 
     @staticmethod
-    def O():
+    def __O():
         return Tetromino(
             Vec2(1.5, 0.5),
             [Vec2(1, 0), Vec2(2, 0), Vec2(1, 1), Vec2(2, 1)],
@@ -107,7 +124,7 @@ class Tetromino:
         )
 
     @staticmethod
-    def S():
+    def __S():
         return Tetromino(
             Vec2(1, 1),
             [Vec2(1, 0), Vec2(2, 0), Vec2(0, 1), Vec2(1, 1)],
@@ -116,7 +133,7 @@ class Tetromino:
         )
 
     @staticmethod
-    def T():
+    def __T():
         return Tetromino(
             Vec2(1, 1),
             [Vec2(0, 1), Vec2(1, 0), Vec2(1, 1), Vec2(2, 1)],
@@ -125,7 +142,7 @@ class Tetromino:
         )
 
     @staticmethod
-    def Z():
+    def __Z():
         return Tetromino(
             Vec2(1, 1),
             [Vec2(0, 0), Vec2(1, 0), Vec2(1, 1), Vec2(2, 1)],
