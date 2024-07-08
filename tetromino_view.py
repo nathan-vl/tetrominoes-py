@@ -1,4 +1,5 @@
 import pygame
+from board import Board
 
 class TetrominoView:
     @staticmethod

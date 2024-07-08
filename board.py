@@ -3,12 +3,16 @@ import random
 from tetromino import Tetromino
 from utils import Vec2
 
+import pygame
+
 
 class Board:
     TILE_SIZE = 20
 
     WIDTH = 10
     HEIGHT = 20
+
+    TICK_DT = 300
 
     LOCK_DELAY_MS = 500
     MOVE_LOCK_DELAY_LIMIT = 15
@@ -18,10 +22,11 @@ class Board:
         self.tetrominoes_stack = Board.new_tetrominoes()
 
         self.current = self.tetrominoes_stack.pop()
-        self.current.move(Vec2((Board.WIDTH - 1) // 2, 22))
+        self.current.move(Vec2((Board.WIDTH - 1) // 2, 0))
 
         self.fall_dt = 0
         self.fall_move_dt = 0
+        self.last_tick_time = 0
 
     def new_tetrominoes():
         TETROMINOES = [
@@ -35,7 +40,7 @@ class Board:
         ]
         return random.sample(TETROMINOES, k=len(TETROMINOES))
 
-    def turn_left(self):
+    def turn_anticlockwise(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.turn_anticlockwise()
 
@@ -62,7 +67,7 @@ class Board:
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
 
-    def turn_right(self):
+    def turn_clockwise(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.turn_clockwise()
 
@@ -109,6 +114,9 @@ class Board:
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
 
+    def soft_drop(self):
+        self.current.move_relative(Vec2(0, 1))
+
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
             if pos.x < 0 or pos.x >= Board.WIDTH:
@@ -140,6 +148,11 @@ class Board:
         else:
             self.fall_dt = 0
             self.fall_move_dt = 0
+
+        time = pygame.time.get_ticks()
+        if (time - self.last_tick_time) > Board.TICK_DT:
+            self.last_tick_time = time
+            self.tick()
 
     def set_current_in_matrix(self):
         for position in self.current.positions:

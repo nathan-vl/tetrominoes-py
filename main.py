@@ -4,7 +4,6 @@ from board_view import BoardView
 
 FPS = 60
 TILE_SIZE = 20
-UPDATE_DT = 300
 
 
 def main():
@@ -12,8 +11,6 @@ def main():
     screen = pygame.display.set_mode((1280, 720))
     clock = pygame.time.Clock()
     dt = 0
-
-    last_update_time = 0
 
     board = Board()
 
@@ -24,11 +21,11 @@ def main():
                 return False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:
-                    board.turn_left()
+                    board.turn_anticlockwise()
                     board.fall_move_dt += 1
                     board.fall_dt = 0
                 if event.key == pygame.K_x:
-                    board.turn_right()
+                    board.turn_clockwise()
                     board.fall_move_dt += 1
                     board.fall_dt = 0
                 if event.key == pygame.K_LEFT:
@@ -37,17 +34,14 @@ def main():
                 if event.key == pygame.K_RIGHT:
                     board.move_right()
                     board.fall_move_dt += 1
+                if event.key == pygame.K_DOWN:
+                    board.soft_drop()
 
         screen.fill("grey")
         screen.blit(BoardView.render(board), (100, 100))
         pygame.display.flip()
 
         board.update(dt)
-
-        time = pygame.time.get_ticks()
-        if (time - last_update_time) > UPDATE_DT:
-            last_update_time = time
-            board.tick()
 
         dt = clock.tick(FPS)
 

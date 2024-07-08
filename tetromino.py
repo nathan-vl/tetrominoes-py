@@ -21,26 +21,30 @@ class Tetromino:
     color: str
     type: TetrominoType
 
-    def turn_anticlockwise(self):
+    def turn_clockwise(self):
         for i, pos in enumerate(self.positions):
             pos -= self.origin
-            pos.x, pos.y = -pos.y, pos.x
+            temp = pos.x
+            pos.x = -pos.y
+            pos.y = temp
             pos += self.origin
 
             self.positions[i] = pos
 
-    def turn_clockwise(self):
+    def turn_anticlockwise(self):
         for i, pos in enumerate(self.positions):
             pos -= self.origin
-            pos.x, pos.y = pos.y, -pos.x
+            temp = pos.x
+            pos.x = pos.y
+            pos.y = -temp
             pos += self.origin
 
             self.positions[i] = pos
 
     def fall(self):
-        self.origin.y -= 1
+        self.origin.y += 1
         for i in range(len(self.positions)):
-            self.positions[i].y -= 1
+            self.positions[i].y += 1
     
     def move(self, pos):
         distance = pos - self.origin
@@ -69,8 +73,8 @@ class Tetromino:
     @staticmethod
     def I():
         return Tetromino(
-            Vec2(1.5, 0.5),
-            [Vec2(0, 0), Vec2(1, 0), Vec2(2, 0), Vec2(3, 0)],
+            Vec2(1.5, 1.5),
+            [Vec2(0, 1), Vec2(1, 1), Vec2(2, 1), Vec2(3, 1)],
             "cyan",
             TetrominoType.I,
         )
@@ -88,7 +92,7 @@ class Tetromino:
     def L():
         return Tetromino(
             Vec2(1, 1),
-            [Vec2(0, 1), Vec2(1, 1), Vec2(2, 1), Vec2(2, 0)],
+            [Vec2(2, 0), Vec2(0, 1), Vec2(1, 1), Vec2(2, 1)],
             "orange",
             TetrominoType.L,
         )
@@ -96,8 +100,8 @@ class Tetromino:
     @staticmethod
     def O():
         return Tetromino(
-            Vec2(0.5, 0.5),
-            [Vec2(0, 0), Vec2(1, 0), Vec2(0, 1), Vec2(1, 1)],
+            Vec2(1.5, 0.5),
+            [Vec2(1, 0), Vec2(2, 0), Vec2(1, 1), Vec2(2, 1)],
             "yellow",
             TetrominoType.O,
         )
@@ -114,8 +118,8 @@ class Tetromino:
     @staticmethod
     def T():
         return Tetromino(
-            Vec2(0, 0),
-            [Vec2(0, 0), Vec2(-1, 0), Vec2(1, 0), Vec2(0, 1)],
+            Vec2(1, 1),
+            [Vec2(0, 1), Vec2(1, 0), Vec2(1, 1), Vec2(2, 1)],
             "purple",
             TetrominoType.T,
         )
