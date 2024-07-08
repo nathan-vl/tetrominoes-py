@@ -1,9 +1,28 @@
 import copy
+from enum import IntEnum
 from utils import Vec2
 from tetromino import Tetromino
 from tetromino_queue import TetrominoQueue
 
 import pygame
+
+
+class ScoreType(IntEnum):
+    Single = 0
+    Double = 1
+    Triple = 2
+    Tetris = 3
+    MiniTSpin = 4
+    TSpinNoline = 5
+    MiniTSpinSingle	= 6
+    TSpinSingle	= 7
+    MiniTSpinDouble = 8
+    TSpinDouble = 9
+    TSpinTriple = 10
+    BackToBack = 11
+    Combo = 12
+    SoftDrop = 13
+    HardDrop = 14
 
 
 class Board:
@@ -30,6 +49,8 @@ class Board:
         self.move_count_fall = 0
         self.fall_move_dt = 0
         self.last_tick_ms = 0
+        self.level = 1
+        self.score = 0
 
     def turn_anticlockwise(self):
         tetromino_copy = copy.deepcopy(self.current)
@@ -174,6 +195,8 @@ class Board:
 
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
+        lines_cleared = Board.HEIGHT - len(new_matrix)
+        self.add_score(lines_cleared-1, False)
         if len(new_matrix) < Board.HEIGHT:
             new_matrix = [
                 [None for _ in range(Board.WIDTH)]
@@ -197,3 +220,44 @@ class Board:
                 copy_tetromino.move_relative(Vec2(0, -1))
                 return copy_tetromino
             copy_tetromino.move_relative(Vec2(0, 1))
+
+    def add_score(self, score_type, b2b):
+        points = 0
+        if score_type == ScoreType.Single:
+            points += 100 * self.level
+        elif score_type == ScoreType.Double:
+            points += 300 * self.level
+        elif score_type == ScoreType.Triple:
+            points += 500 * self.level
+        elif score_type == ScoreType.Tetris:
+            points += 800 * self.level
+        elif score_type == ScoreType.MiniTSpin:
+            points += 100 * self.level
+        elif score_type == ScoreType.TSpinNoline:
+            points += 400 * self.level
+        elif score_type == ScoreType.MiniTSpinSingle:
+            points += 200 * self.level
+        elif score_type == ScoreType.TSpinSingle:
+            points += 800 * self.level
+        elif score_type == ScoreType.MiniTSpinDouble:
+            points += 400 * self.level
+        elif score_type == ScoreType.TSpinDouble:
+            points += 1200 * self.level
+        elif score_type == ScoreType.TSpinTriple:
+            points += 1600 * self.level
+        elif score_type == ScoreType.BackToBack:
+            points += 800 * self.level
+
+        if b2b:
+            points = int(1.5 * points)
+
+        self.score += points
+
+    def add_drop_score(self, score_type, cells):
+        sum = 0
+        match score_type:
+            case ScoreType.SoftDrop:
+                sum = cells
+            case ScoreType.HardDrop:
+                sum = cells * 2
+        self.score +=sum
