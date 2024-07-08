@@ -1,5 +1,6 @@
 import pygame
 from board import Board
+from tetromino_view import TetrominoView
 
 class BoardView:
     @staticmethod
@@ -13,7 +14,7 @@ class BoardView:
 
         surface.fill("black")
         BoardView.render_pieces(board, surface)
-        board.current.draw(surface, Board.TILE_SIZE)
+        TetrominoView.render(board.current, surface, Board.TILE_SIZE)
 
         BoardView.render_vertical_gridlines(surface)
         BoardView.render_horizontal_gridlines(surface)

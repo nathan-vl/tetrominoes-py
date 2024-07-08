@@ -3,8 +3,6 @@ from enum import Enum
 from typing import List
 from utils import Vec2
 
-import pygame
-
 
 class TetrominoType(Enum):
     I = 0
@@ -22,19 +20,6 @@ class Tetromino:
     positions: List[Vec2]
     color: str
     type: TetrominoType
-
-    def draw(self, surface, tile_size):
-        for pos in self.positions:
-            pygame.draw.rect(
-                surface,
-                self.color,
-                pygame.Rect(
-                    pos.x * tile_size,
-                    pos.y * tile_size,
-                    tile_size,
-                    tile_size,
-                ),
-            )
 
     def turn_anticlockwise(self):
         for i, pos in enumerate(self.positions):
