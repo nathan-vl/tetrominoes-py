@@ -22,11 +22,12 @@ class Board:
         self.tetrominoes_stack = Board.new_tetrominoes()
 
         self.current = self.tetrominoes_stack.pop()
-        self.current.move(Vec2((Board.WIDTH - 1) // 2, 0))
+        self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
         self.fall_dt = 0
+        self.move_count_fall = 0
         self.fall_move_dt = 0
-        self.last_tick_time = 0
+        self.last_tick_ms = 0
 
     def new_tetrominoes():
         TETROMINOES = [
@@ -95,35 +96,35 @@ class Board:
             self.current = tetromino_copy
 
     def move_left(self):
-        for tile in self.current.positions:
-            if tile.x <= 0:
-                return
-
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.move_relative(Vec2(-1, 0))
+
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
+            self.move_count_fall += 1
 
     def move_right(self):
-        for tile in self.current.positions:
-            if tile.x >= (Board.WIDTH - 1):
-                return
-
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.move_relative(Vec2(1, 0))
+
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
+            self.move_count_fall += 1
 
     def soft_drop(self):
-        self.current.move_relative(Vec2(0, 1))
+        tetromino_copy = copy.deepcopy(self.current)
+        tetromino_copy.fall()
+
+        if self.check_collision(tetromino_copy):
+            self.lock_current_in_matrix()
+        else:
+            self.current = tetromino_copy
 
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
             if pos.x < 0 or pos.x >= Board.WIDTH:
                 return True
-            if pos.y < 0:
-                return True
-            if pos.y < Board.HEIGHT and self.matrix[int(pos.y)][int(pos.x)] is not None:
+            if pos.y >= Board.HEIGHT or (pos.y >= 0 and self.matrix[int(pos.y)][int(pos.x)] is not None):
                 return True
         return False
 
@@ -143,25 +144,25 @@ class Board:
             if (self.fall_dt > Board.LOCK_DELAY_MS) or (
                 self.fall_move_dt > Board.MOVE_LOCK_DELAY_LIMIT
             ):
-                self.set_current_in_matrix()
+                self.lock_current_in_matrix()
                 self.clear_rows()
         else:
             self.fall_dt = 0
             self.fall_move_dt = 0
 
         time = pygame.time.get_ticks()
-        if (time - self.last_tick_time) > Board.TICK_DT:
-            self.last_tick_time = time
+        if (time - self.last_tick_ms) > Board.TICK_DT:
+            self.last_tick_ms = time
             self.tick()
 
-    def set_current_in_matrix(self):
-        for position in self.current.positions:
-            self.matrix[int(position.y)][int(position.x)] = self.current.color
+    def lock_current_in_matrix(self):
+        for pos in self.current.positions:
+            self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
         if len(self.tetrominoes_stack) == 0:
             self.tetrominoes_stack = Board.new_tetrominoes()
         self.current = self.tetrominoes_stack.pop()
-        self.current.move(Vec2((Board.WIDTH - 1) // 2, 22))
+        self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
