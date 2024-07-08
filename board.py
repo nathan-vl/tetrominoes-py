@@ -1,4 +1,3 @@
-import pygame
 import copy
 import random
 from tetromino import Tetromino
@@ -35,53 +34,6 @@ class Board:
             Tetromino.Z(),
         ]
         return random.sample(TETROMINOES, k=len(TETROMINOES))
-
-    def render(self):
-        surface = pygame.Surface(
-            (
-                Board.WIDTH * Board.TILE_SIZE,
-                Board.HEIGHT * Board.TILE_SIZE,
-            )
-        )
-
-        surface.fill("black")
-        for y, row in enumerate(self.matrix):
-            for x, tile in enumerate(row):
-                if tile is not None:
-                    pygame.draw.rect(
-                        surface,
-                        tile,
-                        pygame.Rect(
-                            x * Board.TILE_SIZE,
-                            y * Board.TILE_SIZE,
-                            Board.TILE_SIZE,
-                            Board.TILE_SIZE,
-                        ),
-                    )
-        self.current.draw(surface, Board.TILE_SIZE)
-
-        self.render_vertical_gridlines(surface)
-        self.render_horizontal_gridlines(surface)
-
-        return surface
-
-    def render_horizontal_gridlines(self, surface):
-        for i in range(Board.HEIGHT):
-            pygame.draw.line(
-                surface,
-                "gray45",
-                (0, i * Board.TILE_SIZE),
-                (Board.WIDTH * Board.TILE_SIZE, i * Board.TILE_SIZE),
-            )
-
-    def render_vertical_gridlines(self, surface):
-        for i in range(Board.WIDTH):
-            pygame.draw.line(
-                surface,
-                "gray45",
-                (i * Board.TILE_SIZE, 0),
-                (i * Board.TILE_SIZE, Board.HEIGHT * Board.TILE_SIZE),
-            )
 
     def turn_left(self):
         tetromino_copy = copy.deepcopy(self.current)

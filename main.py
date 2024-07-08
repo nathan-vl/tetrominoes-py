@@ -1,5 +1,6 @@
 import pygame
 from board import Board
+from board_view import BoardView
 
 FPS = 60
 TILE_SIZE = 20
@@ -38,7 +39,7 @@ def main():
                     board.fall_move_dt += 1
 
         screen.fill("grey")
-        screen.blit(board.render(), (100, 100))
+        screen.blit(BoardView.render(board), (100, 100))
         pygame.display.flip()
 
         board.update(dt)
