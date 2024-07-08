@@ -45,7 +45,7 @@ class Board:
         )
 
         surface.fill("black")
-        for y, row in enumerate((self.matrix)):
+        for y, row in enumerate(self.matrix):
             for x, tile in enumerate(row):
                 if tile is not None:
                     pygame.draw.rect(
@@ -153,14 +153,12 @@ class Board:
 
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
-            print(pos)
             if pos.x < 0 or pos.x >= Board.WIDTH:
                 return True
             if pos.y < 0:
                 return True
             if pos.y < Board.HEIGHT and self.matrix[int(pos.y)][int(pos.x)] is not None:
                 return True
-        print(False)
         return False
 
     def tick(self):
