@@ -12,6 +12,16 @@ class BoardView:
         )
 
         surface.fill("black")
+        BoardView.render_pieces(board, surface)
+        board.current.draw(surface, Board.TILE_SIZE)
+
+        BoardView.render_vertical_gridlines(surface)
+        BoardView.render_horizontal_gridlines(surface)
+
+        return surface
+
+    @staticmethod
+    def render_pieces(board, surface):
         for y, row in enumerate(board.matrix):
             for x, tile in enumerate(row):
                 if tile is not None:
@@ -25,11 +35,6 @@ class BoardView:
                             Board.TILE_SIZE,
                         ),
                     )
-        board.current.draw(surface, Board.TILE_SIZE)
-        BoardView.render_vertical_gridlines(surface)
-        BoardView.render_horizontal_gridlines(surface)
-
-        return surface
 
     @staticmethod
     def render_horizontal_gridlines(surface):
