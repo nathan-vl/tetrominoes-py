@@ -135,13 +135,13 @@ class Board:
             if (self.fall_dt > Board.LOCK_DELAY_MS) or (
                 self.fall_move_dt > Board.MOVE_LOCK_DELAY_LIMIT
             ):
-                self.set_current_in_place()
+                self.set_current_in_matrix()
                 self.clear_rows()
         else:
             self.fall_dt = 0
             self.fall_move_dt = 0
 
-    def set_current_in_place(self):
+    def set_current_in_matrix(self):
         for position in self.current.positions:
             self.matrix[int(position.y)][int(position.x)] = self.current.color
 
