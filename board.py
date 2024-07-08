@@ -60,13 +60,12 @@ class Board:
                     )
         self.current.draw(surface, Board.TILE_SIZE)
 
-        for i in range(Board.WIDTH):
-            pygame.draw.line(
-                surface,
-                "gray45",
-                (i * Board.TILE_SIZE, 0),
-                (i * Board.TILE_SIZE, Board.HEIGHT * Board.TILE_SIZE),
-            )
+        self.render_vertical_gridlines(surface)
+        self.render_horizontal_gridlines(surface)
+
+        return surface
+
+    def render_horizontal_gridlines(self, surface):
         for i in range(Board.HEIGHT):
             pygame.draw.line(
                 surface,
@@ -75,7 +74,14 @@ class Board:
                 (Board.WIDTH * Board.TILE_SIZE, i * Board.TILE_SIZE),
             )
 
-        return surface
+    def render_vertical_gridlines(self, surface):
+        for i in range(Board.WIDTH):
+            pygame.draw.line(
+                surface,
+                "gray45",
+                (i * Board.TILE_SIZE, 0),
+                (i * Board.TILE_SIZE, Board.HEIGHT * Board.TILE_SIZE),
+            )
 
     def turn_left(self):
         tetromino_copy = copy.deepcopy(self.current)
