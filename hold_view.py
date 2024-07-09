@@ -1,7 +1,9 @@
 import pygame
 
-from tetromino import Tetromino
+from tetromino import Tetromino, TetrominoType
 from tetromino_view import TetrominoView
+from utils import Vec2
+
 
 class HoldView:
     @staticmethod
@@ -9,5 +11,7 @@ class HoldView:
         surface = pygame.Surface((4 * tile_size, 4 * tile_size))
         surface.fill("black")
         if hold_piece is not None:
-            TetrominoView.render(Tetromino.fromType(hold_piece), surface, tile_size)
+            tetromino = Tetromino.fromType(hold_piece)
+            tetromino.move_relative(Vec2(0, 1))
+            TetrominoView.render(tetromino, surface, tile_size)
         return surface

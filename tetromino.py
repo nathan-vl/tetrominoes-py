@@ -62,7 +62,7 @@ class Tetromino:
         self.origin.y += 1
         for i in range(len(self.positions)):
             self.positions[i].y += 1
-    
+
     def move(self, pos):
         distance = pos - self.origin
         if self.type == TetrominoType.O or self.type == TetrominoType.I:
@@ -73,7 +73,7 @@ class Tetromino:
         self.origin += pos
         for i in range(len(self.positions)):
             self.positions[i] += pos
-    
+
     def get_pieces_height(self):
         return [pos.x for pos in self.positions]
 

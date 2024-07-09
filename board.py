@@ -14,8 +14,8 @@ class ScoreType(IntEnum):
     Tetris = 3
     MiniTSpin = 4
     TSpinNoline = 5
-    MiniTSpinSingle	= 6
-    TSpinSingle	= 7
+    MiniTSpinSingle = 6
+    TSpinSingle = 7
     MiniTSpinDouble = 8
     TSpinDouble = 9
     TSpinTriple = 10
@@ -156,14 +156,16 @@ class Board:
         for pos in tetromino.positions:
             if pos.x < 0 or pos.x >= Board.WIDTH:
                 return True
-            if pos.y >= Board.HEIGHT or (pos.y >= 0 and self.matrix[int(pos.y)][int(pos.x)] is not None):
+            if pos.y >= Board.HEIGHT or (
+                pos.y >= 0 and self.matrix[int(pos.y)][int(pos.x)] is not None
+            ):
                 return True
         return False
 
     def tick(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
-        self.score_alpha-=100
+        self.score_alpha -= 100
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
 
@@ -198,7 +200,7 @@ class Board:
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
         lines_cleared = Board.HEIGHT - len(new_matrix)
-        self.add_score(lines_cleared-1, False)
+        self.add_score(lines_cleared - 1, False)
         if len(new_matrix) < Board.HEIGHT:
             new_matrix = [
                 [None for _ in range(Board.WIDTH)]
@@ -270,4 +272,4 @@ class Board:
                 sum = cells
             case ScoreType.HardDrop:
                 sum = cells * 2
-        self.score +=sum
+        self.score += sum

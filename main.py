@@ -42,13 +42,21 @@ def main():
                     board.soft_drop()
 
         screen.fill("grey")
+
         board_surface = BoardView.render(board)
         queue_surface = QueueView.render(board.queue, TILE_SIZE)
         hold_surface = HoldView.render(board.hold_piece, TILE_SIZE)
         score_surface = BoardView.render_score(board)
+
         screen.blit(board_surface, (100, 100))
-        screen.blit(queue_surface, (100 + Board.TILE_SIZE + board_surface.get_width(), 100))
-        screen.blit(hold_surface, (0, 0))
+        screen.blit(
+            hold_surface, (100 + Board.TILE_SIZE + board_surface.get_width(), 100)
+        )
+        screen.blit(
+            queue_surface,
+            (100 + Board.TILE_SIZE + board_surface.get_width(), 100 + TILE_SIZE * 5),
+        )
+
         screen.blit(score_surface, (0, 200))
         pygame.display.flip()
 

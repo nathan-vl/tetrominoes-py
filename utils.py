@@ -16,4 +16,4 @@ class Vec2:
         return Vec2(self.x - pos.x, self.y - pos.y)
 
     def __str__(self):
-        return f'({self.x}, {self.y})'
+        return f"({self.x}, {self.y})"

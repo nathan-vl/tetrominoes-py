@@ -28,7 +28,9 @@ class TetrominoQueue:
         for i in range(TetrominoQueue.VISIBLE_QUEUE_COUNT):
             queue.append(self.queue[i])
         return queue
-    
+
     @staticmethod
     def __bag():
-        return random.sample(TetrominoQueue.TETROMINOES, k=len(TetrominoQueue.TETROMINOES))
+        return random.sample(
+            TetrominoQueue.TETROMINOES, k=len(TetrominoQueue.TETROMINOES)
+        )
