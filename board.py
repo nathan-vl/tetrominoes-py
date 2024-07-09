@@ -275,6 +275,10 @@ class Board:
         else:
             self.current = tetromino_copy
 
+    def hard_drop(self):
+        self.current = self.ghost_current()
+        self.lock_current_in_matrix()
+
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
             if pos.x < 0 or pos.x >= Board.WIDTH:
@@ -339,9 +343,6 @@ class Board:
 
     def ghost_current(self):
         copy_tetromino = copy.deepcopy(self.current)
-        color = pygame.Color(self.current.color)
-        color.a = 150
-        copy_tetromino.color = color
         while True:
             if self.check_collision(copy_tetromino):
                 copy_tetromino.move_relative(Vec2(0, -1))

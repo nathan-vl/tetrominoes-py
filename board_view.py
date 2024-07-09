@@ -63,6 +63,9 @@ class BoardView:
     @staticmethod
     def render_ghost(surface, board):
         ghost = board.ghost_current()
+        color = pygame.Color(ghost.color)
+        color.a = 150
+        ghost.color = color
         TetrominoView.render(ghost, surface, Board.TILE_SIZE)
 
     @staticmethod

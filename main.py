@@ -26,7 +26,7 @@ def main():
                     board.turn_anticlockwise()
                     board.fall_move_dt += 1
                     board.fall_dt = 0
-                if event.key == pygame.K_x:
+                if event.key == pygame.K_UP:
                     board.turn_clockwise()
                     board.fall_move_dt += 1
                     board.fall_dt = 0
@@ -40,6 +40,8 @@ def main():
                     board.fall_move_dt += 1
                 if event.key == pygame.K_DOWN:
                     board.soft_drop()
+                if event.key == pygame.K_SPACE:
+                    board.hard_drop()
 
         screen.fill("grey")
 
