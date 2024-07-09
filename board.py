@@ -51,6 +51,8 @@ class Board:
         self.last_tick_ms = 0
         self.level = 1
         self.score = 0
+        self.last_score_type = ""
+        self.score_alpha = 0
 
     def turn_anticlockwise(self):
         tetromino_copy = copy.deepcopy(self.current)
@@ -161,7 +163,7 @@ class Board:
     def tick(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
-
+        self.score_alpha-=100
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
 
@@ -225,12 +227,20 @@ class Board:
         points = 0
         if score_type == ScoreType.Single:
             points += 100 * self.level
+            self.last_score_type = "Single"
+            self.score_alpha = 300
         elif score_type == ScoreType.Double:
             points += 300 * self.level
+            self.last_score_type = "Double"
+            self.score_alpha = 300
         elif score_type == ScoreType.Triple:
             points += 500 * self.level
+            self.last_score_type = "Triple"
+            self.score_alpha = 300
         elif score_type == ScoreType.Tetris:
             points += 800 * self.level
+            self.last_score_type = "Tetris"
+            self.score_alpha = 300
         elif score_type == ScoreType.MiniTSpin:
             points += 100 * self.level
         elif score_type == ScoreType.TSpinNoline:
