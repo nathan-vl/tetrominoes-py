@@ -317,6 +317,9 @@ class Board:
             self.tick()
 
     def lock_current_in_matrix(self):
+        if self.check_collision(self.current):
+            print(f"Fim de jogo. Pontuação: {self.score}")
+            exit(0)
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
