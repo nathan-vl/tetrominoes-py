@@ -1,7 +1,7 @@
 import copy
 from enum import IntEnum
 from utils import Vec2
-from tetromino import Tetromino
+from tetromino import Rotation, Tetromino, TetrominoType
 from tetromino_queue import TetrominoQueue
 
 import pygame
@@ -23,6 +23,141 @@ class ScoreType(IntEnum):
     Combo = 12
     SoftDrop = 13
     HardDrop = 14
+
+
+WALL_KICK_DATA_COMMON = {
+    Rotation.Origin: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, -1),
+            Vec2(0, 2),
+            Vec2(-1, 2),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, -1),
+            Vec2(0, 2),
+            Vec2(1, 2),
+        ],
+    },
+    Rotation.Right: {
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, 1),
+            Vec2(0, -2),
+            Vec2(1, -2),
+        ],
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, 1),
+            Vec2(0, -2),
+            Vec2(1, -2),
+        ],
+    },
+    Rotation.Double: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, -1),
+            Vec2(0, 2),
+            Vec2(-1, 2),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, -1),
+            Vec2(0, 2),
+            Vec2(1, 2),
+        ],
+    },
+    Rotation.Left: {
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, 1),
+            Vec2(0, -2),
+            Vec2(-1, -2),
+        ],
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, 1),
+            Vec2(0, -2),
+            Vec2(-1, -2),
+        ],
+    },
+}
+
+WALL_KICK_DATA_I_TETROMINO = {
+    Rotation.Origin: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(-2, 0),
+            Vec2(1, 0),
+            Vec2(-2, 1),
+            Vec2(1, -2),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(2, 0),
+            Vec2(-1, -2),
+            Vec2(2, 1),
+        ],
+    },
+    Rotation.Right: {
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(2, 0),
+            Vec2(-1, 0),
+            Vec2(2, -1),
+            Vec2(-1, 2),
+        ],
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(2, 0),
+            Vec2(-1, -2),
+            Vec2(2, 1),
+        ],
+    },
+    Rotation.Double: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(-2, 0),
+            Vec2(1, 2),
+            Vec2(-2, -1),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(2, 0),
+            Vec2(-1, 0),
+            Vec2(2, -1),
+            Vec2(-1, 2),
+        ],
+    },
+    Rotation.Left: {
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(-2, 0),
+            Vec2(1, 0),
+            Vec2(-2, 1),
+            Vec2(1, -2),
+        ],
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(-2, 0),
+            Vec2(1, 2),
+            Vec2(-2, -1),
+        ],
+    },
+}
 
 
 class Board:
@@ -55,58 +190,46 @@ class Board:
         self.score_alpha = 0
 
     def turn_anticlockwise(self):
-        tetromino_copy = copy.deepcopy(self.current)
-        tetromino_copy.turn_anticlockwise()
+        kick_tests = []
+        if self.current.type == TetrominoType.I:
+            kick_tests = WALL_KICK_DATA_I_TETROMINO[self.current.rotation][
+                Rotation.anticlockwise(self.current.rotation)
+            ]
+        else:
+            kick_tests = WALL_KICK_DATA_COMMON[self.current.rotation][
+                Rotation.anticlockwise(self.current.rotation)
+            ]
 
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
+        for test in kick_tests:
+            tetromino_copy = copy.deepcopy(self.current)
+            tetromino_copy.turn_anticlockwise()
 
-        tetromino_copy.move_relative(Vec2(1, 0))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
-
-        tetromino_copy.move_relative(Vec2(0, -1))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
-
-        tetromino_copy.move_relative(Vec2(-1, 3))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
-
-        tetromino_copy.move_relative(Vec2(1, 0))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
+            tetromino_copy.move_relative(test)
+            if not self.check_collision(tetromino_copy):
+                self.current = tetromino_copy
+                # TODO: Reset counters
+                return
 
     def turn_clockwise(self):
-        tetromino_copy = copy.deepcopy(self.current)
-        tetromino_copy.turn_clockwise()
+        kick_tests = []
+        if self.current.type == TetrominoType.I:
+            kick_tests = WALL_KICK_DATA_I_TETROMINO[self.current.rotation][
+                Rotation.clockwise(self.current.rotation)
+            ]
+        else:
+            kick_tests = WALL_KICK_DATA_COMMON[self.current.rotation][
+                Rotation.clockwise(self.current.rotation)
+            ]
 
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
+        for test in kick_tests:
+            tetromino_copy = copy.deepcopy(self.current)
+            tetromino_copy.turn_clockwise()
 
-        tetromino_copy.move_relative(Vec2(-1, 0))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
-
-        tetromino_copy.move_relative(Vec2(0, -1))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
-
-        tetromino_copy.move_relative(Vec2(1, 3))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
-            return
-
-        tetromino_copy.move_relative(Vec2(-1, 0))
-        if not self.check_collision(tetromino_copy):
-            self.current = tetromino_copy
+            tetromino_copy.move_relative(test)
+            if not self.check_collision(tetromino_copy):
+                self.current = tetromino_copy
+                # TODO: Reset counters
+                return
 
     def move_left(self):
         tetromino_copy = copy.deepcopy(self.current)

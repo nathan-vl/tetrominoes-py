@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum
 from typing import List
 from utils import Vec2
 
 
-class TetrominoType(Enum):
+class TetrominoType(IntEnum):
     I = 0
     J = 1
     L = 2
@@ -14,12 +14,28 @@ class TetrominoType(Enum):
     Z = 6
 
 
+class Rotation(IntEnum):
+    Origin = 0
+    Right = 1
+    Double = 2
+    Left = 3
+
+    @staticmethod
+    def clockwise(self):
+        return (self + 1) % 4
+
+    @staticmethod
+    def anticlockwise(rotation):
+        return (rotation + 3) % 4
+
+
 @dataclass
 class Tetromino:
     origin: Vec2
     positions: List[Vec2]
     color: str
     type: TetrominoType
+    rotation: Rotation = Rotation.Origin
 
     @staticmethod
     def fromType(type):
@@ -39,6 +55,7 @@ class Tetromino:
             return Tetromino.__Z()
 
     def turn_clockwise(self):
+        self.rotation = Rotation.clockwise(self.rotation)
         for i, pos in enumerate(self.positions):
             pos -= self.origin
             temp = pos.x
@@ -49,6 +66,7 @@ class Tetromino:
             self.positions[i] = pos
 
     def turn_anticlockwise(self):
+        self.rotation = Rotation.anticlockwise(self.rotation)
         for i, pos in enumerate(self.positions):
             pos -= self.origin
             temp = pos.x
