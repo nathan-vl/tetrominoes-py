@@ -1,7 +1,144 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import List
+from direction import Direction
+from rotation import Rotation
 from utils import Vec2
+
+
+WALL_KICK_DATA_COMMON = {
+    Rotation.Origin: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, -1),
+            Vec2(0, 2),
+            Vec2(-1, 2),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, -1),
+            Vec2(0, 2),
+            Vec2(1, 2),
+        ],
+    },
+    Rotation.Right: {
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, 1),
+            Vec2(0, -2),
+            Vec2(1, -2),
+        ],
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, 1),
+            Vec2(0, -2),
+            Vec2(1, -2),
+        ],
+    },
+    Rotation.Double: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, -1),
+            Vec2(0, 2),
+            Vec2(-1, 2),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(1, -1),
+            Vec2(0, 2),
+            Vec2(1, 2),
+        ],
+    },
+    Rotation.Left: {
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, 1),
+            Vec2(0, -2),
+            Vec2(-1, -2),
+        ],
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(-1, 1),
+            Vec2(0, -2),
+            Vec2(-1, -2),
+        ],
+    },
+}
+
+WALL_KICK_DATA_I_TETROMINO = {
+    Rotation.Origin: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(-2, 0),
+            Vec2(1, 0),
+            Vec2(-2, 1),
+            Vec2(1, -2),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(2, 0),
+            Vec2(-1, -2),
+            Vec2(2, 1),
+        ],
+    },
+    Rotation.Right: {
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(2, 0),
+            Vec2(-1, 0),
+            Vec2(2, -1),
+            Vec2(-1, 2),
+        ],
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(-1, 0),
+            Vec2(2, 0),
+            Vec2(-1, -2),
+            Vec2(2, 1),
+        ],
+    },
+    Rotation.Double: {
+        Rotation.Right: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(-2, 0),
+            Vec2(1, 2),
+            Vec2(-2, -1),
+        ],
+        Rotation.Left: [
+            Vec2(0, 0),
+            Vec2(2, 0),
+            Vec2(-1, 0),
+            Vec2(2, -1),
+            Vec2(-1, 2),
+        ],
+    },
+    Rotation.Left: {
+        Rotation.Double: [
+            Vec2(0, 0),
+            Vec2(-2, 0),
+            Vec2(1, 0),
+            Vec2(-2, 1),
+            Vec2(1, -2),
+        ],
+        Rotation.Origin: [
+            Vec2(0, 0),
+            Vec2(1, 0),
+            Vec2(-2, 0),
+            Vec2(1, 2),
+            Vec2(-2, -1),
+        ],
+    },
+}
 
 
 class TetrominoType(IntEnum):
@@ -14,21 +151,6 @@ class TetrominoType(IntEnum):
     Z = 6
 
 
-class Rotation(IntEnum):
-    Origin = 0
-    Right = 1
-    Double = 2
-    Left = 3
-
-    @staticmethod
-    def clockwise(self):
-        return (self + 1) % 4
-
-    @staticmethod
-    def anticlockwise(rotation):
-        return (rotation + 3) % 4
-
-
 @dataclass
 class Tetromino:
     origin: Vec2
@@ -37,8 +159,13 @@ class Tetromino:
     type: TetrominoType
     rotation: Rotation = Rotation.Origin
 
+    def get_wall_kick_tests(self, destRotation):
+        if self.type == TetrominoType.I:
+            return WALL_KICK_DATA_I_TETROMINO[self.rotation][destRotation]
+        return WALL_KICK_DATA_COMMON[self.rotation][destRotation]
+
     @staticmethod
-    def fromType(type):
+    def from_type(type):
         if type == TetrominoType.I:
             return Tetromino.__I()
         if type == TetrominoType.J:
@@ -53,9 +180,15 @@ class Tetromino:
             return Tetromino.__T()
         if type == TetrominoType.Z:
             return Tetromino.__Z()
+        
+    def turn(self, direction):
+        if direction == Direction.Left:
+            self.__turn_anticlockwise()
+        else:
+            self.__turn_clockwise()
 
-    def turn_clockwise(self):
-        self.rotation = Rotation.clockwise(self.rotation)
+    def __turn_clockwise(self):
+        self.rotation = Rotation.rotate(self.rotation, Direction.Left)
         for i, pos in enumerate(self.positions):
             pos -= self.origin
             temp = pos.x
@@ -65,8 +198,8 @@ class Tetromino:
 
             self.positions[i] = pos
 
-    def turn_anticlockwise(self):
-        self.rotation = Rotation.anticlockwise(self.rotation)
+    def __turn_anticlockwise(self):
+        self.rotation = Rotation.rotate(self.rotation, Direction.Right)
         for i, pos in enumerate(self.positions):
             pos -= self.origin
             temp = pos.x

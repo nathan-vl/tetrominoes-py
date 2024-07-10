@@ -21,7 +21,7 @@ class TetrominoQueue:
         piece = self.queue.pop(0)
         if len(self.queue) < TetrominoQueue.VISIBLE_QUEUE_COUNT:
             self.queue.extend(TetrominoQueue.__bag())
-        return Tetromino.fromType(piece)
+        return Tetromino.from_type(piece)
 
     def current_queue(self):
         queue = []

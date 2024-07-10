@@ -1,6 +1,6 @@
 from typing import List
 
-from tetromino import Tetromino, TetrominoType
+from tetromino import Tetromino
 from tetromino_view import TetrominoView
 from utils import Vec2
 
@@ -27,7 +27,7 @@ class QueueView:
         for i in range(queue.VISIBLE_QUEUE_COUNT):
             origin_y = i * QueueView.TETROMINO_MAX_OCCUPY_HEIGHT
 
-            piece = Tetromino.fromType(pieces[i])
+            piece = Tetromino.from_type(pieces[i])
             piece.move_relative(Vec2(0, origin_y))
 
             TetrominoView.render(piece, surface, tile_size)

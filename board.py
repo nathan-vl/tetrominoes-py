@@ -25,141 +25,6 @@ class ScoreType(IntEnum):
     HardDrop = 14
 
 
-WALL_KICK_DATA_COMMON = {
-    Rotation.Origin: {
-        Rotation.Right: [
-            Vec2(0, 0),
-            Vec2(-1, 0),
-            Vec2(-1, -1),
-            Vec2(0, 2),
-            Vec2(-1, 2),
-        ],
-        Rotation.Left: [
-            Vec2(0, 0),
-            Vec2(1, 0),
-            Vec2(1, -1),
-            Vec2(0, 2),
-            Vec2(1, 2),
-        ],
-    },
-    Rotation.Right: {
-        Rotation.Origin: [
-            Vec2(0, 0),
-            Vec2(1, 0),
-            Vec2(1, 1),
-            Vec2(0, -2),
-            Vec2(1, -2),
-        ],
-        Rotation.Double: [
-            Vec2(0, 0),
-            Vec2(1, 0),
-            Vec2(1, 1),
-            Vec2(0, -2),
-            Vec2(1, -2),
-        ],
-    },
-    Rotation.Double: {
-        Rotation.Right: [
-            Vec2(0, 0),
-            Vec2(-1, 0),
-            Vec2(-1, -1),
-            Vec2(0, 2),
-            Vec2(-1, 2),
-        ],
-        Rotation.Left: [
-            Vec2(0, 0),
-            Vec2(1, 0),
-            Vec2(1, -1),
-            Vec2(0, 2),
-            Vec2(1, 2),
-        ],
-    },
-    Rotation.Left: {
-        Rotation.Double: [
-            Vec2(0, 0),
-            Vec2(-1, 0),
-            Vec2(-1, 1),
-            Vec2(0, -2),
-            Vec2(-1, -2),
-        ],
-        Rotation.Origin: [
-            Vec2(0, 0),
-            Vec2(-1, 0),
-            Vec2(-1, 1),
-            Vec2(0, -2),
-            Vec2(-1, -2),
-        ],
-    },
-}
-
-WALL_KICK_DATA_I_TETROMINO = {
-    Rotation.Origin: {
-        Rotation.Right: [
-            Vec2(0, 0),
-            Vec2(-2, 0),
-            Vec2(1, 0),
-            Vec2(-2, 1),
-            Vec2(1, -2),
-        ],
-        Rotation.Left: [
-            Vec2(0, 0),
-            Vec2(-1, 0),
-            Vec2(2, 0),
-            Vec2(-1, -2),
-            Vec2(2, 1),
-        ],
-    },
-    Rotation.Right: {
-        Rotation.Origin: [
-            Vec2(0, 0),
-            Vec2(2, 0),
-            Vec2(-1, 0),
-            Vec2(2, -1),
-            Vec2(-1, 2),
-        ],
-        Rotation.Double: [
-            Vec2(0, 0),
-            Vec2(-1, 0),
-            Vec2(2, 0),
-            Vec2(-1, -2),
-            Vec2(2, 1),
-        ],
-    },
-    Rotation.Double: {
-        Rotation.Right: [
-            Vec2(0, 0),
-            Vec2(1, 0),
-            Vec2(-2, 0),
-            Vec2(1, 2),
-            Vec2(-2, -1),
-        ],
-        Rotation.Left: [
-            Vec2(0, 0),
-            Vec2(2, 0),
-            Vec2(-1, 0),
-            Vec2(2, -1),
-            Vec2(-1, 2),
-        ],
-    },
-    Rotation.Left: {
-        Rotation.Double: [
-            Vec2(0, 0),
-            Vec2(-2, 0),
-            Vec2(1, 0),
-            Vec2(-2, 1),
-            Vec2(1, -2),
-        ],
-        Rotation.Origin: [
-            Vec2(0, 0),
-            Vec2(1, 0),
-            Vec2(-2, 0),
-            Vec2(1, 2),
-            Vec2(-2, -1),
-        ],
-    },
-}
-
-
 class Board:
     TILE_SIZE = 20
 
@@ -190,47 +55,26 @@ class Board:
         self.last_score_type = ""
         self.score_alpha = 0
 
-    def turn_anticlockwise(self):
-        kick_tests = []
-        if self.current.type == TetrominoType.I:
-            kick_tests = WALL_KICK_DATA_I_TETROMINO[self.current.rotation][
-                Rotation.anticlockwise(self.current.rotation)
-            ]
-        else:
-            kick_tests = WALL_KICK_DATA_COMMON[self.current.rotation][
-                Rotation.anticlockwise(self.current.rotation)
-            ]
+    def try_turn_current(self, direction):
+        new_rotation = Rotation.rotate(self.current.rotation, direction)
+        kick_tests = self.current.get_wall_kick_tests(new_rotation)
 
+        tetromino_copy = copy.deepcopy(self.current)
+        tetromino_copy.turn(direction)
+
+        new_tetromino = self.test_wall_kicks(kick_tests, tetromino_copy)
+        if new_tetromino is not None:
+            self.current = tetromino_copy
+            # TODO: Reset counters
+
+    def test_wall_kicks(self, kick_tests, tetromino):
         for test in kick_tests:
-            tetromino_copy = copy.deepcopy(self.current)
-            tetromino_copy.turn_anticlockwise()
-
+            tetromino_copy = copy.deepcopy(tetromino)
             tetromino_copy.move_relative(test)
             if not self.check_collision(tetromino_copy):
-                self.current = tetromino_copy
-                # TODO: Reset counters
-                return
+                return tetromino_copy
 
-    def turn_clockwise(self):
-        kick_tests = []
-        if self.current.type == TetrominoType.I:
-            kick_tests = WALL_KICK_DATA_I_TETROMINO[self.current.rotation][
-                Rotation.clockwise(self.current.rotation)
-            ]
-        else:
-            kick_tests = WALL_KICK_DATA_COMMON[self.current.rotation][
-                Rotation.clockwise(self.current.rotation)
-            ]
-
-        for test in kick_tests:
-            tetromino_copy = copy.deepcopy(self.current)
-            tetromino_copy.turn_clockwise()
-
-            tetromino_copy.move_relative(test)
-            if not self.check_collision(tetromino_copy):
-                self.current = tetromino_copy
-                # TODO: Reset counters
-                return
+        return None
 
     def move_left(self):
         tetromino_copy = copy.deepcopy(self.current)
@@ -261,7 +105,7 @@ class Board:
         else:
             temp = self.hold_piece
             self.hold_piece = self.current.type
-            self.current = Tetromino.fromType(temp)
+            self.current = Tetromino.from_type(temp)
             self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
         self.fall_dt = 0
@@ -314,7 +158,9 @@ class Board:
 
         time = pygame.time.get_ticks()
 
-        if (time - self.last_tick_ms) > Board.TICK_DT*(0.8-((self.level-1)*0.007))**(self.level-1):
+        if (time - self.last_tick_ms) > Board.TICK_DT * (
+            0.8 - ((self.level - 1) * 0.007)
+        ) ** (self.level - 1):
             self.last_tick_ms = time
             self.tick()
 
@@ -394,10 +240,10 @@ class Board:
 
         self.score += points
         self.score_level += points
-        
+
         if self.score_level >= 1000:
             self.score_level = 0
-            self.level+=1
+            self.level += 1
 
     def add_drop_score(self, score_type, cells):
         sum = 0

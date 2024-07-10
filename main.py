@@ -1,6 +1,7 @@
 import pygame
 from board import Board
 from board_view import BoardView
+from direction import Direction
 from hold_view import HoldView
 from queue_view import QueueView
 
@@ -11,7 +12,7 @@ TILE_SIZE = 20
 def main():
     pygame.init()
     screen = pygame.display.set_mode((410, 410))
-    clock =  pygame.time.Clock()
+    clock = pygame.time.Clock()
     dt = 0
 
     board = Board()
@@ -23,11 +24,11 @@ def main():
                 return False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:
-                    board.turn_anticlockwise()
+                    board.try_turn_current(Direction.Left)
                     board.fall_move_dt += 1
                     board.fall_dt = 0
                 if event.key == pygame.K_UP:
-                    board.turn_clockwise()
+                    board.try_turn_current(Direction.Right)
                     board.fall_move_dt += 1
                     board.fall_dt = 0
                 if event.key == pygame.K_c:
