@@ -10,8 +10,8 @@ TILE_SIZE = 20
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((1280, 720))
-    clock = pygame.time.Clock()
+    screen = pygame.display.set_mode((410, 410))
+    clock =  pygame.time.Clock()
     dt = 0
 
     board = Board()
@@ -50,16 +50,15 @@ def main():
         hold_surface = HoldView.render(board.hold_piece, TILE_SIZE)
         score_surface = BoardView.render_score(board)
 
-        screen.blit(board_surface, (100, 100))
+        screen.blit(board_surface, (110, 5))
         screen.blit(
-            hold_surface, (100 + Board.TILE_SIZE + board_surface.get_width(), 100)
+            hold_surface, (100 + Board.TILE_SIZE + board_surface.get_width(), 5)
         )
         screen.blit(
             queue_surface,
-            (100 + Board.TILE_SIZE + board_surface.get_width(), 100 + TILE_SIZE * 5),
+            (100 + Board.TILE_SIZE + board_surface.get_width(), TILE_SIZE * 5 + 5),
         )
-
-        screen.blit(score_surface, (0, 200))
+        screen.blit(score_surface, (5, 5))
         pygame.display.flip()
 
         board.update(dt)

@@ -185,6 +185,7 @@ class Board:
         self.fall_move_dt = 0
         self.last_tick_ms = 0
         self.level = 1
+        self.score_level = 0
         self.score = 0
         self.last_score_type = ""
         self.score_alpha = 0
@@ -312,7 +313,8 @@ class Board:
             self.fall_move_dt = 0
 
         time = pygame.time.get_ticks()
-        if (time - self.last_tick_ms) > Board.TICK_DT:
+
+        if (time - self.last_tick_ms) > Board.TICK_DT*(0.8-((self.level-1)*0.007))**(self.level-1):
             self.last_tick_ms = time
             self.tick()
 
@@ -391,6 +393,11 @@ class Board:
             points = int(1.5 * points)
 
         self.score += points
+        self.score_level += points
+        
+        if self.score_level >= 1000:
+            self.score_level = 0
+            self.level+=1
 
     def add_drop_score(self, score_type, cells):
         sum = 0
