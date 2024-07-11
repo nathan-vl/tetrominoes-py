@@ -1,7 +1,7 @@
 import copy
 from enum import IntEnum
 from utils import Vec2
-from tetromino import Rotation, Tetromino, TetrominoType
+from tetromino import Rotation, Tetromino
 from tetromino_queue import TetrominoQueue
 
 import pygame
@@ -151,7 +151,6 @@ class Board:
                 self.fall_move_dt > Board.MOVE_LOCK_DELAY_LIMIT
             ):
                 self.lock_current_in_matrix()
-                self.clear_rows()
         else:
             self.fall_dt = 0
             self.fall_move_dt = 0
@@ -170,6 +169,8 @@ class Board:
             exit(0)
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
+
+        self.clear_rows()
 
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
