@@ -12,7 +12,7 @@ class QueueView:
     TETROMINO_MAX_OCCUPY_HEIGHT = 3
 
     @staticmethod
-    def render(queue: List[Tetromino], tile_size):
+    def surface(queue, tile_size):
         total_width = tile_size * QueueView.TETROMINO_MAX_OCCUPY_WIDTH
         total_height = (
             queue.VISIBLE_QUEUE_COUNT

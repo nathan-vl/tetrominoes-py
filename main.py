@@ -46,10 +46,10 @@ def main():
 
         screen.fill("grey")
 
-        board_surface = BoardView.render(board)
-        queue_surface = QueueView.render(board.queue, TILE_SIZE)
-        hold_surface = HoldView.render(board.hold_piece, TILE_SIZE)
-        score_surface = BoardView.render_score(board)
+        board_surface = BoardView.surface(board)
+        queue_surface = QueueView.surface(board.queue, TILE_SIZE)
+        hold_surface = HoldView.surface(board.hold_piece, TILE_SIZE)
+        score_surface = BoardView.__render_score(board)
 
         screen.blit(board_surface, (110, 5))
         screen.blit(

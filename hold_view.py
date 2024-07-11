@@ -7,7 +7,7 @@ from utils import Vec2
 
 class HoldView:
     @staticmethod
-    def render(hold_piece, tile_size):
+    def surface(hold_piece, tile_size):
         surface = pygame.Surface((4 * tile_size, 4 * tile_size))
         surface.fill("black")
         if hold_piece is not None:

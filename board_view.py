@@ -5,7 +5,7 @@ from tetromino_view import TetrominoView
 
 class BoardView:
     @staticmethod
-    def render(board):
+    def surface(board):
         surface = pygame.Surface(
             (
                 Board.WIDTH * Board.TILE_SIZE,
@@ -15,17 +15,17 @@ class BoardView:
         )
 
         surface.fill("black")
-        BoardView.render_pieces(board, surface)
-        BoardView.render_ghost(surface, board)
+        BoardView.__render_pieces(board, surface)
+        BoardView.__render_ghost(surface, board)
         TetrominoView.render(board.current, surface, Board.TILE_SIZE)
 
-        BoardView.render_vertical_gridlines(surface)
-        BoardView.render_horizontal_gridlines(surface)
+        BoardView.__render_vertical_gridlines(surface)
+        BoardView.__render_horizontal_gridlines(surface)
 
         return surface
 
     @staticmethod
-    def render_pieces(board, surface):
+    def __render_pieces(board, surface):
         for y, row in enumerate(board.matrix):
             for x, tile in enumerate(row):
                 if tile is not None:
@@ -41,7 +41,7 @@ class BoardView:
                     )
 
     @staticmethod
-    def render_horizontal_gridlines(surface):
+    def __render_horizontal_gridlines(surface):
         for i in range(Board.HEIGHT):
             pygame.draw.line(
                 surface,
@@ -51,7 +51,7 @@ class BoardView:
             )
 
     @staticmethod
-    def render_vertical_gridlines(surface):
+    def __render_vertical_gridlines(surface):
         for i in range(Board.WIDTH):
             pygame.draw.line(
                 surface,
@@ -61,7 +61,7 @@ class BoardView:
             )
 
     @staticmethod
-    def render_ghost(surface, board):
+    def __render_ghost(surface, board):
         ghost = board.ghost_current()
         color = pygame.Color(ghost.color)
         color.a = 150
@@ -69,7 +69,7 @@ class BoardView:
         TetrominoView.render(ghost, surface, Board.TILE_SIZE)
 
     @staticmethod
-    def render_score(board):
+    def __render_score(board):
         surface = pygame.Surface(
             (
                 100,
@@ -78,11 +78,11 @@ class BoardView:
             pygame.SRCALPHA,
         )
         surface.fill("black")
-        BoardView.render_text(surface, board)
+        BoardView.__render_text(surface, board)
         return surface
 
     @staticmethod
-    def render_text(surface, board):
+    def __render_text(surface, board):
         pygame.font.init()
         my_font = pygame.font.SysFont("microsofttaile", 25)
         score_points = my_font.render(str(board.score), False, (255, 255, 255))
