@@ -49,7 +49,7 @@ def main():
         board_surface = BoardView.surface(board)
         queue_surface = QueueView.surface(board.queue, TILE_SIZE)
         hold_surface = HoldView.surface(board.hold_piece, TILE_SIZE)
-        score_surface = BoardView.__render_score(board)
+        score_surface = BoardView.render_score(board)
 
         screen.blit(board_surface, (110, 5))
         screen.blit(

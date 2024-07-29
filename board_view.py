@@ -69,7 +69,7 @@ class BoardView:
         TetrominoView.render(ghost, surface, Board.TILE_SIZE)
 
     @staticmethod
-    def __render_score(board):
+    def render_score(board):
         surface = pygame.Surface(
             (
                 100,

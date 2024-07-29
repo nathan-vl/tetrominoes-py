@@ -31,7 +31,7 @@ class Board:
     WIDTH = 10
     HEIGHT = 20
 
-    TICK_DT = 300
+    TICK_DT = 1000
 
     LOCK_DELAY_MS = 500
     MOVE_LOCK_DELAY_LIMIT = 15
