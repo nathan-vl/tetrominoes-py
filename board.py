@@ -64,7 +64,7 @@ class Board:
 
         new_tetromino = self.test_wall_kicks(kick_tests, tetromino_copy)
         if new_tetromino is not None:
-            self.current = tetromino_copy
+            self.current = new_tetromino
             # TODO: Reset counters
 
     def test_wall_kicks(self, kick_tests, tetromino):
