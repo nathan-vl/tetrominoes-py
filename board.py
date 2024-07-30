@@ -55,6 +55,7 @@ class Board:
         self.score = 0
         self.last_score_type = ""
         self.score_alpha = 0
+        self.combo = 0
 
     def try_turn_current(self, direction):
         new_rotation = Rotation.rotate(self.current.rotation, direction)
@@ -178,7 +179,7 @@ class Board:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
         self.clear_rows()
-
+        
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
         self.did_swap_current_piece = False
@@ -186,7 +187,10 @@ class Board:
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
         lines_cleared = Board.HEIGHT - len(new_matrix)
-        self.add_score(lines_cleared - 1, False)
+        if lines_cleared == 0:
+            self.combo = 0
+        else:
+            self.add_score(lines_cleared - 1, False)
         if len(new_matrix) < Board.HEIGHT:
             new_matrix = [
                 [None for _ in range(Board.WIDTH)]
@@ -245,6 +249,12 @@ class Board:
 
         if b2b:
             points = int(1.5 * points)
+
+        if(self.combo >= 1):
+            points += 50*self.combo*self.level
+            self.combo += 1
+        else:
+            self.combo = 1    
 
         self.score += points
         self.score_level += points

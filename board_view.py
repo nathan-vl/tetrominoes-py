@@ -87,6 +87,13 @@ class BoardView:
         my_font = pygame.font.SysFont("microsofttaile", 25)
         score_points = my_font.render(str(int(board.score)), False, (255, 255, 255))
         text_score = my_font.render(str(board.last_score_type), False, (255, 255, 255))
+        text_level = my_font.render("level " + str(board.level), False, (255, 255, 255))
+        text_combo = my_font.render("combo " + str(board.combo), False, (255, 255, 255))
         text_score.set_alpha(board.score_alpha)
         surface.blit(score_points, (0, 0))
-        surface.blit(text_score, (0, 50))
+        surface.blit(text_level, (0, 25))
+        surface.blit(text_combo, (0, 50))
+        surface.blit(text_score, (0, 75))
+        
+        
+        
