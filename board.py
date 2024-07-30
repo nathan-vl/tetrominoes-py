@@ -49,6 +49,7 @@ class Board:
         self.move_count_fall = 0
         self.fall_move_dt = 0
         self.last_tick_ms = 0
+        self.last_tick_ms_score = 0
         self.level = 1
         self.score_level = 0
         self.score = 0
@@ -118,11 +119,14 @@ class Board:
         if self.check_collision(tetromino_copy):
             self.lock_current_in_matrix()
         else:
+            self.add_drop_score(ScoreType.SoftDrop, 1)
             self.current = tetromino_copy
 
     def hard_drop(self):
+        height = self.ghost_current().origin.y - self.current.origin.y
         self.current = self.ghost_current()
         self.lock_current_in_matrix()
+        self.add_drop_score(ScoreType.HardDrop, height)
 
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
@@ -137,7 +141,6 @@ class Board:
     def tick(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
-        self.score_alpha -= 100
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
 
@@ -156,6 +159,10 @@ class Board:
             self.fall_move_dt = 0
 
         time = pygame.time.get_ticks()
+
+        if(time - self.last_tick_ms_score) > 600:
+            self.score_alpha -= 33
+            self.last_tick_ms_score = time
 
         if (time - self.last_tick_ms) > Board.TICK_DT * (
             0.8 - ((self.level - 1) * 0.007)

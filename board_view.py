@@ -85,7 +85,7 @@ class BoardView:
     def __render_text(surface, board):
         pygame.font.init()
         my_font = pygame.font.SysFont("microsofttaile", 25)
-        score_points = my_font.render(str(board.score), False, (255, 255, 255))
+        score_points = my_font.render(str(int(board.score)), False, (255, 255, 255))
         text_score = my_font.render(str(board.last_score_type), False, (255, 255, 255))
         text_score.set_alpha(board.score_alpha)
         surface.blit(score_points, (0, 0))
