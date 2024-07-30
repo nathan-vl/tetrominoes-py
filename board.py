@@ -1,7 +1,7 @@
 import copy
 from enum import IntEnum
 from utils import Vec2
-from tetromino import Rotation, Tetromino
+from tetromino import Rotation, Tetromino, TetrominoType
 from tetromino_queue import TetrominoQueue
 
 import pygame
@@ -45,6 +45,9 @@ class Board:
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
 
         self.did_swap_current_piece = False
+        self.did_turn_last_move = False
+        self.did_turn_move_2_side_1_down = False
+
         self.fall_dt = 0
         self.move_count_fall = 0
         self.fall_move_dt = 0
@@ -66,14 +69,16 @@ class Board:
 
         new_tetromino = self.test_wall_kicks(kick_tests, tetromino_copy)
         if new_tetromino is not None:
+            self.did_turn_last_move = True
             self.current = new_tetromino
             # TODO: Reset counters
 
     def test_wall_kicks(self, kick_tests, tetromino):
-        for test in kick_tests:
+        for i, test in enumerate(kick_tests):
             tetromino_copy = copy.deepcopy(tetromino)
             tetromino_copy.move_relative(test)
             if not self.check_collision(tetromino_copy):
+                self.did_turn_move_2_side_1_down = i == 3
                 return tetromino_copy
 
         return None
@@ -99,6 +104,8 @@ class Board:
             return
 
         self.did_swap_current_piece = True
+        self.did_turn_last_move = False
+        self.did_turn_move_2_side_1_down = False
 
         if self.hold_piece is None:
             self.hold_piece = self.current.type
@@ -120,6 +127,8 @@ class Board:
         if self.check_collision(tetromino_copy):
             self.lock_current_in_matrix()
         else:
+            self.did_turn_last_move = False
+            self.did_turn_move_2_side_1_down = False
             self.add_drop_score(ScoreType.SoftDrop, 1)
             self.current = tetromino_copy
 
@@ -161,7 +170,7 @@ class Board:
 
         time = pygame.time.get_ticks()
 
-        if(time - self.last_tick_ms_score) > 600:
+        if (time - self.last_tick_ms_score) > 600:
             self.score_alpha -= 33
             self.last_tick_ms_score = time
 
@@ -179,10 +188,12 @@ class Board:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
         self.clear_rows()
-        
+
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
         self.did_swap_current_piece = False
+        self.did_turn_last_move = False
+        self.did_turn_move_2_side_1_down = False
 
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
@@ -203,6 +214,94 @@ class Board:
             if tile is None:
                 return False
         return True
+
+    def get_t_piece_front_minoes(self):
+        if self.current.rotation == Rotation.Origin:
+            return [
+                self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y - 1][self.current.origin.x + 1],
+            ]
+        elif self.current.rotation == Rotation.Left:
+            return [
+                self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
+            ]
+        elif self.current.rotation == Rotation.Right:
+            return [
+                self.matrix[self.current.origin.y - 1][self.current.origin.x + 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x + 1],
+            ]
+        else:
+            return [
+                self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x + 1],
+            ]
+
+    def get_t_piece_back_minoes(self):
+        if self.current.rotation == Rotation.Origin:
+            if self.current.origin.y == 0:
+                return ["white", "white"]
+            return [
+                self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x + 1],
+            ]
+        elif self.current.rotation == Rotation.Left:
+            if self.current.origin.x == (Board.WIDTH - 1):
+                return ["white", "white"]
+            return [
+                self.matrix[self.current.origin.y - 1][self.current.origin.x + 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x + 1],
+            ]
+        elif self.current.rotation == Rotation.Right:
+            if self.current.origin.x == 0:
+                return ["white", "white"]
+            return [
+                self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
+            ]
+        else:
+            if self.current.origin.y == (Board.HEIGHT - 1):
+                return ["white", "white"]
+            return [
+                self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y - 1][self.current.origin.x + 1],
+            ]
+
+    def qtd_t_piece_front_minoes(self):
+        total = 0
+        pieces = self.get_t_piece_front_minoes()
+        if pieces[0] is not None:
+            total += 1
+        if pieces[1] is not None:
+            total += 1
+        return total
+
+    def qtd_t_piece_back_minoes(self):
+        total = 0
+        pieces = self.get_t_piece_back_minoes()
+        if pieces[0] is not None:
+            total += 1
+        if pieces[1] is not None:
+            total += 1
+        return total
+
+    def is_full_t_spin(self):
+        if self.current.type != TetrominoType.T or not self.did_turn_last_move:
+            return False
+        back_pieces = self.qtd_t_piece_back_minoes(self)
+        front_pieces = self.qtd_t_piece_front_minoes(self)
+        if back_pieces + front_pieces < 3:
+            return False
+        return front_pieces == 2 or self.did_turn_move_2_side_1_down
+
+    def is_mini_t_spin(self):
+        if self.current.type != TetrominoType.T or not self.did_turn_last_move:
+            return False
+        back_pieces = self.qtd_t_piece_back_minoes(self)
+        front_pieces = self.qtd_t_piece_front_minoes(self)
+        if back_pieces + front_pieces < 3:
+            return False
+        return back_pieces == 2
 
     def ghost_current(self):
         copy_tetromino = copy.deepcopy(self.current)
@@ -250,11 +349,11 @@ class Board:
         if b2b:
             points = int(1.5 * points)
 
-        if(self.combo >= 1):
-            points += 50*self.combo*self.level
+        if self.combo >= 1:
+            points += 50 * self.combo * self.level
             self.combo += 1
         else:
-            self.combo = 1    
+            self.combo = 1
 
         self.score += points
         self.score_level += points
