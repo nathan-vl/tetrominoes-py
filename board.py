@@ -222,13 +222,13 @@ class Board:
             ]
         elif self.current.rotation == Rotation.Left:
             return [
-                self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
-                self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y - 1][self.current.origin.x + 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x + 1],
             ]
         elif self.current.rotation == Rotation.Right:
             return [
-                self.matrix[self.current.origin.y - 1][self.current.origin.x + 1],
-                self.matrix[self.current.origin.y + 1][self.current.origin.x + 1],
+                self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
+                self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
             ]
         else:
             return [
