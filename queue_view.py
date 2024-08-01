@@ -20,7 +20,7 @@ class QueueView:
             * QueueView.TETROMINO_MAX_OCCUPY_HEIGHT
         )
 
-        surface = pygame.Surface((total_width, total_height))
+        surface = pygame.Surface((total_width, total_height), pygame.SRCALPHA)
         surface.fill("black")
 
         pieces = queue.current_queue()
