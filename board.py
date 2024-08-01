@@ -311,40 +311,46 @@ class Board:
                 return copy_tetromino
             copy_tetromino.move_relative(Vec2(0, 1))
 
-    def add_score(self, score_type, b2b):
+    def add_score(self, lines_cleared, b2b):
         points = 0
-        if score_type == ScoreType.Single:
+        if self.is_full_t_spin():
+            if lines_cleared == 0:
+                points += 400 * self.level
+                self.last_score_type = "T-Spin"
+            if lines_cleared == 1:
+                points += 800 * self.level
+                self.last_score_type = "Single T-Spin"
+            elif lines_cleared == 2:
+                points += 1200 * self.level
+                self.last_score_type = "Double T-Spin"
+            elif lines_cleared == 3:
+                points += 1600 * self.level
+                self.last_score_type = "Triple T-Spin"
+        elif self.is_mini_t_spin():
+            if lines_cleared == 0:
+                points += 100 * self.level
+                self.last_score_type = "Mini T-Spin"
+            if lines_cleared == 1:
+                points += 200 * self.level
+                self.last_score_type = "Single Mini T-Spin"
+            elif lines_cleared == 2:
+                points += 400 * self.level
+                self.last_score_type = "Double Mini T-Spin"
+        elif lines_cleared == 1:
             points += 100 * self.level
             self.last_score_type = "Single"
-            self.score_alpha = 300
-        elif score_type == ScoreType.Double:
+        elif lines_cleared == 2:
             points += 300 * self.level
             self.last_score_type = "Double"
-            self.score_alpha = 300
-        elif score_type == ScoreType.Triple:
+        elif lines_cleared == 3:
             points += 500 * self.level
             self.last_score_type = "Triple"
-            self.score_alpha = 300
-        elif score_type == ScoreType.Tetris:
+        elif lines_cleared == 4:
             points += 800 * self.level
             self.last_score_type = "Tetris"
-            self.score_alpha = 300
-        elif score_type == ScoreType.MiniTSpin:
-            points += 100 * self.level
-        elif score_type == ScoreType.TSpinNoline:
-            points += 400 * self.level
-        elif score_type == ScoreType.MiniTSpinSingle:
-            points += 200 * self.level
-        elif score_type == ScoreType.TSpinSingle:
-            points += 800 * self.level
-        elif score_type == ScoreType.MiniTSpinDouble:
-            points += 400 * self.level
-        elif score_type == ScoreType.TSpinDouble:
-            points += 1200 * self.level
-        elif score_type == ScoreType.TSpinTriple:
-            points += 1600 * self.level
-        elif score_type == ScoreType.BackToBack:
-            points += 800 * self.level
+
+        # elif score_type == ScoreType.BackToBack:
+        #     points += 800 * self.level
 
         if b2b:
             points = int(1.5 * points)
@@ -354,6 +360,9 @@ class Board:
             self.combo += 1
         else:
             self.combo = 1
+
+        if points > 0:
+            self.score_alpha = 300
 
         self.score += points
         self.score_level += points
