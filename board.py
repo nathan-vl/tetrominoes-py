@@ -315,47 +315,36 @@ class Board:
         if qtd_lines == 1 and not is_Tspin and not is_mini_Tspin:
             points += 100 * self.level
             self.last_score_type = "Single"
-            self.score_alpha = 300
         elif qtd_lines == 2 and not is_Tspin and not is_mini_Tspin:
             points += 300 * self.level
             self.last_score_type = "Double"
-            self.score_alpha = 300
         elif qtd_lines == 3 and not is_Tspin and not is_mini_Tspin:
             points += 500 * self.level
             self.last_score_type = "Triple"
-            self.score_alpha = 300
         elif qtd_lines == 4 and not is_Tspin and not is_mini_Tspin:
             points += 800 * self.level
             self.last_score_type = "Tetris"
-            self.score_alpha = 300
         elif qtd_lines == 0 and not is_Tspin and is_mini_Tspin:
             points += 100 * self.level
             self.last_score_type = "Mini T-Spin"
-            self.score_alpha = 300
         elif qtd_lines == 0 and is_Tspin and not is_mini_Tspin:
             points += 400 * self.level
             self.last_score_type = "T-Spin"
-            self.score_alpha = 300
         elif qtd_lines == 1 and not is_Tspin and is_mini_Tspin:
             points += 200 * self.level
             self.last_score_type = "Mini T-Spin Single"
-            self.score_alpha = 300
         elif qtd_lines == 1 and is_Tspin and not is_mini_Tspin:
             points += 800 * self.level
             self.last_score_type = "T-Spin Single"
-            self.score_alpha = 300
         elif qtd_lines == 1 and not is_Tspin and is_mini_Tspin:
             points += 400 * self.level
             self.last_score_type = "Mini T-Spin Double"
-            self.score_alpha = 300
         elif qtd_lines == 2 and is_Tspin and not is_mini_Tspin:
             points += 1200 * self.level
             self.last_score_type = "T-Spin Double"
-            self.score_alpha = 300
         elif qtd_lines == 3 and is_Tspin and not is_mini_Tspin:
             points += 1600 * self.level
             self.last_score_type = "T-Spin Triple"
-            self.score_alpha = 300
 
         if self.combo >= 1:
             points += 50 * self.combo * self.level
