@@ -200,8 +200,7 @@ class Board:
         lines_cleared = Board.HEIGHT - len(new_matrix)
         if lines_cleared == 0:
             self.combo = 0
-        else:
-            self.add_score(lines_cleared - 1, False)
+        self.add_score(lines_cleared, self.is_mini_t_spin(), self.is_full_t_spin(), False)
         if len(new_matrix) < Board.HEIGHT:
             new_matrix = [
                 [None for _ in range(Board.WIDTH)]
@@ -288,8 +287,8 @@ class Board:
     def is_full_t_spin(self):
         if self.current.type != TetrominoType.T or not self.did_turn_last_move:
             return False
-        back_pieces = self.qtd_t_piece_back_minoes(self)
-        front_pieces = self.qtd_t_piece_front_minoes(self)
+        back_pieces = self.qtd_t_piece_back_minoes()
+        front_pieces = self.qtd_t_piece_front_minoes()
         if back_pieces + front_pieces < 3:
             return False
         return front_pieces == 2 or self.did_turn_move_2_side_1_down
@@ -297,8 +296,8 @@ class Board:
     def is_mini_t_spin(self):
         if self.current.type != TetrominoType.T or not self.did_turn_last_move:
             return False
-        back_pieces = self.qtd_t_piece_back_minoes(self)
-        front_pieces = self.qtd_t_piece_front_minoes(self)
+        back_pieces = self.qtd_t_piece_back_minoes()
+        front_pieces = self.qtd_t_piece_front_minoes()
         if back_pieces + front_pieces < 3:
             return False
         return back_pieces == 2
@@ -311,49 +310,61 @@ class Board:
                 return copy_tetromino
             copy_tetromino.move_relative(Vec2(0, 1))
 
-    def add_score(self, score_type, b2b):
+    def add_score(self, qtd_lines, is_Tspin, is_mini_Tspin, b2b):
         points = 0
-        if score_type == ScoreType.Single:
+        if qtd_lines == 1 and not is_Tspin and not is_mini_Tspin:
             points += 100 * self.level
             self.last_score_type = "Single"
             self.score_alpha = 300
-        elif score_type == ScoreType.Double:
+        elif qtd_lines == 2 and not is_Tspin and not is_mini_Tspin:
             points += 300 * self.level
             self.last_score_type = "Double"
             self.score_alpha = 300
-        elif score_type == ScoreType.Triple:
+        elif qtd_lines == 3 and not is_Tspin and not is_mini_Tspin:
             points += 500 * self.level
             self.last_score_type = "Triple"
             self.score_alpha = 300
-        elif score_type == ScoreType.Tetris:
+        elif qtd_lines == 4 and not is_Tspin and not is_mini_Tspin:
             points += 800 * self.level
             self.last_score_type = "Tetris"
             self.score_alpha = 300
-        elif score_type == ScoreType.MiniTSpin:
+        elif qtd_lines == 0 and not is_Tspin and is_mini_Tspin:
             points += 100 * self.level
-        elif score_type == ScoreType.TSpinNoline:
+            self.last_score_type = "Mini T-Spin"
+            self.score_alpha = 300
+        elif qtd_lines == 0 and is_Tspin and not is_mini_Tspin:
             points += 400 * self.level
-        elif score_type == ScoreType.MiniTSpinSingle:
+            self.last_score_type = "T-Spin"
+            self.score_alpha = 300
+        elif qtd_lines == 1 and not is_Tspin and is_mini_Tspin:
             points += 200 * self.level
-        elif score_type == ScoreType.TSpinSingle:
+            self.last_score_type = "Mini T-Spin Single"
+            self.score_alpha = 300
+        elif qtd_lines == 1 and is_Tspin and not is_mini_Tspin:
             points += 800 * self.level
-        elif score_type == ScoreType.MiniTSpinDouble:
+            self.last_score_type = "T-Spin Single"
+            self.score_alpha = 300
+        elif qtd_lines == 1 and not is_Tspin and is_mini_Tspin:
             points += 400 * self.level
-        elif score_type == ScoreType.TSpinDouble:
+            self.last_score_type = "Mini T-Spin Double"
+            self.score_alpha = 300
+        elif qtd_lines == 2 and is_Tspin and not is_mini_Tspin:
             points += 1200 * self.level
-        elif score_type == ScoreType.TSpinTriple:
+            self.last_score_type = "T-Spin Double"
+            self.score_alpha = 300
+        elif qtd_lines == 3 and is_Tspin and not is_mini_Tspin:
             points += 1600 * self.level
-        elif score_type == ScoreType.BackToBack:
-            points += 800 * self.level
-
-        if b2b:
-            points = int(1.5 * points)
+            self.last_score_type = "T-Spin Triple"
+            self.score_alpha = 300
 
         if self.combo >= 1:
             points += 50 * self.combo * self.level
             self.combo += 1
         else:
             self.combo = 1
+
+        if b2b:
+            points = int(1.5 * points)
 
         self.score += points
         self.score_level += points
@@ -370,3 +381,9 @@ class Board:
             case ScoreType.HardDrop:
                 sum = cells * 2
         self.score += sum
+        self.score_level += sum
+        
+        if self.score_level >= 1000:
+            self.score_level = 0
+            self.level += 1
+
