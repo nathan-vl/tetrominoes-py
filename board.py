@@ -365,6 +365,8 @@ class Board:
 
         if b2b:
             points = int(1.5 * points)
+        if points > 0:
+            self.score_alpha = 300
 
         self.score += points
         self.score_level += points
