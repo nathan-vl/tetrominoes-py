@@ -366,11 +366,11 @@ class Board:
 
     def add_drop_score(self, score_type, cells):
         sum = 0
-        match score_type:
-            case ScoreType.SoftDrop:
-                sum = cells
-            case ScoreType.HardDrop:
+        if score_type == ScoreType.SoftDrop:
+            sum = cells
+        elif ScoreType.HardDrop == ScoreType.HardDrop:
                 sum = cells * 2
+                
         self.score += sum
         self.score_level += sum
         
