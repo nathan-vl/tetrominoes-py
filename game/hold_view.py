@@ -1,8 +1,8 @@
 import pygame
 
-from tetromino import Tetromino
-from tetromino_view import TetrominoView
-from utils import Vec2
+from game.tetromino import Tetromino
+from game.tetromino_view import TetrominoView
+from game.utils import Vec2
 
 
 class HoldView:

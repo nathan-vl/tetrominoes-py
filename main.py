@@ -1,9 +1,9 @@
 import pygame
-from board import Board
-from board_view import BoardView
-from direction import Direction
-from hold_view import HoldView
-from queue_view import QueueView
+from game.board import Board
+from game.board_view import BoardView
+from game.direction import Direction
+from game.hold_view import HoldView
+from game.queue_view import QueueView
 
 FPS = 60
 TILE_SIZE = 20

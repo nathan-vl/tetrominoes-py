@@ -1,6 +1,6 @@
 import pygame
-from board import Board
-from tetromino_view import TetrominoView
+from game.board import Board
+from game.tetromino_view import TetrominoView
 
 
 class BoardView:

@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import List
-from direction import Direction
-from rotation import Rotation
-from utils import Vec2
+from game.direction import Direction
+from game.rotation import Rotation
+from game.utils import Vec2
 
 
 WALL_KICK_DATA_COMMON = {

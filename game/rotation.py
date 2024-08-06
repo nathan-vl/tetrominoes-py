@@ -1,5 +1,5 @@
 from enum import IntEnum
-from direction import Direction
+from game.direction import Direction
 
 
 class Rotation(IntEnum):

@@ -1,8 +1,8 @@
 import copy
 from enum import IntEnum
-from utils import Vec2
-from tetromino import Rotation, Tetromino, TetrominoType
-from tetromino_queue import TetrominoQueue
+from game.utils import Vec2
+from game.tetromino import Rotation, Tetromino, TetrominoType
+from game.tetromino_queue import TetrominoQueue
 
 import pygame
 

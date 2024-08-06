@@ -1,5 +1,5 @@
 import random
-from tetromino import Tetromino, TetrominoType
+from game.tetromino import Tetromino, TetrominoType
 
 
 class TetrominoQueue:
