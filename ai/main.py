@@ -1,18 +1,21 @@
-import gymnasium as gym
 import math
 import random
 from itertools import count
+
+import matplotlib
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from ai.memory import Memory
-from ai.neural_network import NeuralNetwork
-from ai.utils import Transition
+from game.action import Action
+from game.board import Board
 
+from .memory import Memory
+from .neural_network import NeuralNetwork
+from .utils import Transition
 
-env = gym.make("CartPole-v1")
 
 device = torch.device(
     "cuda"
@@ -29,9 +32,8 @@ EPS_DECAY = 1000
 TAU = 0.005
 LR = 1e-4
 
-n_actions = env.action_space.n
-state, info = env.reset()
-n_observations = len(state)
+n_actions = 7
+n_observations = 200
 
 policy_net = NeuralNetwork(n_observations, n_actions).to(device)
 target_net = NeuralNetwork(n_observations, n_actions).to(device)
@@ -43,6 +45,35 @@ memory = Memory(10000)
 
 steps_done = 0
 
+is_ipython = "inline" in matplotlib.get_backend()
+if is_ipython:
+    from IPython import display
+
+episode_durations = []
+def plot_durations(show_result=False):
+    plt.figure(1)
+    durations_t = torch.tensor(episode_durations, dtype=torch.float)
+    if show_result:
+        plt.title("Result")
+    else:
+        plt.clf()
+        plt.title("Training...")
+    plt.xlabel("Episode")
+    plt.ylabel("Duration")
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
+
+    plt.pause(0.001)  # pause a bit so that plots are updated
+    if is_ipython:
+        if not show_result:
+            display.display(plt.gcf())
+            display.clear_output(wait=True)
+        else:
+            display.display(plt.gcf())
 
 def select_action(state):
     global steps_done
@@ -58,9 +89,7 @@ def select_action(state):
             # found, so we pick action with the larger expected reward.
             return policy_net(state).max(1).indices.view(1, 1)
     else:
-        return torch.tensor(
-            [[env.action_space.sample()]], device=device, dtype=torch.long
-        )
+        return torch.tensor([[Action.sample()]], device=device, dtype=torch.long)
 
 
 def optimize_model():
@@ -78,7 +107,8 @@ def optimize_model():
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
-    state_action_values = policy_net(state_batch).gather(1, action_batch)
+    result = policy_net(state_batch)
+    state_action_values = result.gather(1, action_batch)
     next_state_values = torch.zeros(BATCH_SIZE, device=device)
 
     with torch.no_grad():
@@ -96,19 +126,21 @@ def optimize_model():
     optimizer.step()
 
 
-if torch.cuda.is_available() or torch.backends.mps.is_available():
-    num_episodes = 600
-else:
-    num_episodes = 50
+# if torch.cuda.is_available() or torch.backends.mps.is_available():
+#     num_episodes = 600
+# else:
+#     num_episodes = 50
+num_episodes = 10000
 
 for i_episode in range(num_episodes):
-    state, info = env.reset()
+    board = Board()
+    state = board.current_state()
     state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+
     for t in count():
         action = select_action(state)
-        observation, reward, terminated, truncated, _ = env.step(action.item())
+        observation, reward, terminated = board.step(action.item())
         reward = torch.tensor([reward], device=device)
-        done = terminated or truncated
 
         if terminated:
             next_state = None
@@ -132,5 +164,8 @@ for i_episode in range(num_episodes):
             ] * TAU + target_net_state_dict[key] * (1 - TAU)
         target_net.load_state_dict(target_net_state_dict)
 
-        if done:
+        if terminated:
+            print(f'{i_episode}: {t}')
+            episode_durations.append(t + 1)
+            plot_durations()
             break

@@ -1,5 +1,7 @@
 import copy
 from enum import IntEnum
+from game.action import Action
+from game.direction import Direction
 from game.utils import Vec2
 from game.tetromino import Rotation, Tetromino, TetrominoType
 from game.tetromino_queue import TetrominoQueue
@@ -124,19 +126,22 @@ class Board:
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
 
+        points = 0
+
         if self.check_collision(tetromino_copy):
             self.lock_current_in_matrix()
         else:
             self.did_turn_last_move = False
             self.did_turn_move_2_side_1_down = False
-            self.add_drop_score(ScoreType.SoftDrop, 1)
             self.current = tetromino_copy
+            points = self.add_drop_score(ScoreType.SoftDrop, 1)
+        return points
 
     def hard_drop(self):
         height = self.ghost_current().origin.y - self.current.origin.y
         self.current = self.ghost_current()
         self.lock_current_in_matrix()
-        self.add_drop_score(ScoreType.HardDrop, height)
+        return self.add_drop_score(ScoreType.HardDrop, height)
 
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
@@ -153,6 +158,35 @@ class Board:
         tetromino_copy.fall()
         if not self.check_collision(tetromino_copy):
             self.current = tetromino_copy
+
+    def step(self, action):
+        reward = 0
+
+        if action == Action.RotateLeft:
+            self.try_turn_current(Direction.Left)
+        elif action == Action.RotateRight:
+            self.try_turn_current(Direction.Right)
+        elif action == Action.Switch:
+            self.swap()
+        if action == Action.Left:
+            self.move_left()
+        if action == Action.Right:
+            self.move_right()
+        if action == Action.SoftDrop:
+            reward += self.soft_drop()
+        if action == Action.HardDrop:
+            reward += self.hard_drop()
+
+        tetromino_copy = copy.deepcopy(self.current)
+        tetromino_copy.fall()
+
+        terminated = False
+        if self.check_collision(tetromino_copy):
+            reward = self.lock_current_in_matrix()
+            terminated = reward == -1
+        self.tick()
+
+        return self.current_state(), reward, terminated
 
     def update(self, dt):
         tetromino_copy = copy.deepcopy(self.current)
@@ -182,25 +216,26 @@ class Board:
 
     def lock_current_in_matrix(self):
         if self.check_collision(self.current):
-            print(f"Fim de jogo. Pontuação: {self.score}")
-            exit(0)
+            # print(f"Fim de jogo. Pontuação: {self.score}")
+            return -1
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
-        self.clear_rows()
+        points = self.clear_rows()
 
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
         self.did_swap_current_piece = False
         self.did_turn_last_move = False
         self.did_turn_move_2_side_1_down = False
+        return points
 
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
         lines_cleared = Board.HEIGHT - len(new_matrix)
         if lines_cleared == 0:
             self.combo = 0
-        self.add_score(
+        points = self.add_score(
             lines_cleared, self.is_mini_t_spin(), self.is_full_t_spin(), False
         )
         if len(new_matrix) < Board.HEIGHT:
@@ -209,6 +244,7 @@ class Board:
                 for _ in range(Board.HEIGHT - len(new_matrix))
             ] + new_matrix
         self.matrix = new_matrix
+        return points
 
     def full_row(self, row):
         for tile in row:
@@ -312,41 +348,6 @@ class Board:
                 return copy_tetromino
             copy_tetromino.move_relative(Vec2(0, 1))
 
-    def get_score(self):
-        new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
-        qtd_lines = Board.HEIGHT - len(new_matrix)
-        is_t_spin = self.is_full_t_spin()
-        is_mini_t_spin = self.is_mini_t_spin()
-
-        points = 0
-        if qtd_lines == 1 and not is_t_spin and not is_mini_t_spin:
-            points += 100 * self.level
-        elif qtd_lines == 2 and not is_t_spin and not is_mini_t_spin:
-            points += 300 * self.level
-        elif qtd_lines == 3 and not is_t_spin and not is_mini_t_spin:
-            points += 500 * self.level
-        elif qtd_lines == 4 and not is_t_spin and not is_mini_t_spin:
-            points += 800 * self.level
-        elif qtd_lines == 0 and not is_t_spin and is_mini_t_spin:
-            points += 100 * self.level
-        elif qtd_lines == 0 and is_t_spin and not is_mini_t_spin:
-            points += 400 * self.level
-        elif qtd_lines == 1 and not is_t_spin and is_mini_t_spin:
-            points += 200 * self.level
-        elif qtd_lines == 1 and is_t_spin and not is_mini_t_spin:
-            points += 800 * self.level
-        elif qtd_lines == 1 and not is_t_spin and is_mini_t_spin:
-            points += 400 * self.level
-        elif qtd_lines == 2 and is_t_spin and not is_mini_t_spin:
-            points += 1200 * self.level
-        elif qtd_lines == 3 and is_t_spin and not is_mini_t_spin:
-            points += 1600 * self.level
-
-        if self.combo >= 1:
-            points += 50 * self.combo * self.level
-
-        return points
-
     def add_score(self, qtd_lines, is_Tspin, is_mini_Tspin, b2b):
         points = 0
         if qtd_lines == 1 and not is_Tspin and not is_mini_Tspin:
@@ -400,6 +401,7 @@ class Board:
         if self.score_level >= 1000:
             self.score_level = 0
             self.level += 1
+        return points
 
     def current_state(self):
         state = []
@@ -412,8 +414,9 @@ class Board:
                     state_row.append(1)
             state.append(state_row)
 
-        for pos in self.current:
-            state[pos.y][pos.x] = 2
+        for pos in self.current.positions:
+            if pos.y >= 0:
+                state[int(pos.y)][int(pos.x)] = 2
 
         return state
 
@@ -430,3 +433,4 @@ class Board:
         if self.score_level >= 1000:
             self.score_level = 0
             self.level += 1
+        return sum

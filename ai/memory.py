@@ -1,7 +1,7 @@
 from collections import deque
 import random
 
-from ai.utils import Transition
+from .utils import Transition
 
 
 class Memory(object):
