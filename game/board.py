@@ -161,29 +161,30 @@ class Board:
 
     def step(self, action):
         reward = 0
+        terminated = False
 
-        if action == Action.RotateLeft:
-            self.try_turn_current(Direction.Left)
-        elif action == Action.RotateRight:
-            self.try_turn_current(Direction.Right)
-        elif action == Action.Switch:
-            self.swap()
-        if action == Action.Left:
-            self.move_left()
-        if action == Action.Right:
-            self.move_right()
         if action == Action.SoftDrop:
             reward += self.soft_drop()
-        if action == Action.HardDrop:
+        elif action == Action.HardDrop:
             reward += self.hard_drop()
+        else:
+            if action == Action.RotateLeft:
+                self.try_turn_current(Direction.Left)
+            elif action == Action.RotateRight:
+                self.try_turn_current(Direction.Right)
+            elif action == Action.Switch:
+                self.swap()
+            elif action == Action.Left:
+                self.move_left()
+            elif action == Action.Right:
+                self.move_right()
+            tetromino_copy = copy.deepcopy(self.current)
+            tetromino_copy.fall()
 
-        tetromino_copy = copy.deepcopy(self.current)
-        tetromino_copy.fall()
+            if self.check_collision(tetromino_copy):
+                reward = self.lock_current_in_matrix()
+                terminated = reward == -1000
 
-        terminated = False
-        if self.check_collision(tetromino_copy):
-            reward = self.lock_current_in_matrix()
-            terminated = reward == -1
         self.tick()
 
         return self.current_state(), reward, terminated
@@ -217,7 +218,7 @@ class Board:
     def lock_current_in_matrix(self):
         if self.check_collision(self.current):
             # print(f"Fim de jogo. Pontuação: {self.score}")
-            return -1
+            return -1000
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
