@@ -200,7 +200,9 @@ class Board:
         lines_cleared = Board.HEIGHT - len(new_matrix)
         if lines_cleared == 0:
             self.combo = 0
-        self.add_score(lines_cleared, self.is_mini_t_spin(), self.is_full_t_spin(), False)
+        self.add_score(
+            lines_cleared, self.is_mini_t_spin(), self.is_full_t_spin(), False
+        )
         if len(new_matrix) < Board.HEIGHT:
             new_matrix = [
                 [None for _ in range(Board.WIDTH)]
@@ -310,6 +312,41 @@ class Board:
                 return copy_tetromino
             copy_tetromino.move_relative(Vec2(0, 1))
 
+    def get_score(self):
+        new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
+        qtd_lines = Board.HEIGHT - len(new_matrix)
+        is_t_spin = self.is_full_t_spin()
+        is_mini_t_spin = self.is_mini_t_spin()
+
+        points = 0
+        if qtd_lines == 1 and not is_t_spin and not is_mini_t_spin:
+            points += 100 * self.level
+        elif qtd_lines == 2 and not is_t_spin and not is_mini_t_spin:
+            points += 300 * self.level
+        elif qtd_lines == 3 and not is_t_spin and not is_mini_t_spin:
+            points += 500 * self.level
+        elif qtd_lines == 4 and not is_t_spin and not is_mini_t_spin:
+            points += 800 * self.level
+        elif qtd_lines == 0 and not is_t_spin and is_mini_t_spin:
+            points += 100 * self.level
+        elif qtd_lines == 0 and is_t_spin and not is_mini_t_spin:
+            points += 400 * self.level
+        elif qtd_lines == 1 and not is_t_spin and is_mini_t_spin:
+            points += 200 * self.level
+        elif qtd_lines == 1 and is_t_spin and not is_mini_t_spin:
+            points += 800 * self.level
+        elif qtd_lines == 1 and not is_t_spin and is_mini_t_spin:
+            points += 400 * self.level
+        elif qtd_lines == 2 and is_t_spin and not is_mini_t_spin:
+            points += 1200 * self.level
+        elif qtd_lines == 3 and is_t_spin and not is_mini_t_spin:
+            points += 1600 * self.level
+
+        if self.combo >= 1:
+            points += 50 * self.combo * self.level
+
+        return points
+
     def add_score(self, qtd_lines, is_Tspin, is_mini_Tspin, b2b):
         points = 0
         if qtd_lines == 1 and not is_Tspin and not is_mini_Tspin:
@@ -364,17 +401,32 @@ class Board:
             self.score_level = 0
             self.level += 1
 
+    def current_state(self):
+        state = []
+        for row in self.matrix:
+            state_row = []
+            for item in row:
+                if item is None:
+                    state_row.append(0)
+                else:
+                    state_row.append(1)
+            state.append(state_row)
+
+        for pos in self.current:
+            state[pos.y][pos.x] = 2
+
+        return state
+
     def add_drop_score(self, score_type, cells):
         sum = 0
         if score_type == ScoreType.SoftDrop:
             sum = cells
         elif ScoreType.HardDrop == ScoreType.HardDrop:
-                sum = cells * 2
-                
+            sum = cells * 2
+
         self.score += sum
         self.score_level += sum
-        
+
         if self.score_level >= 1000:
             self.score_level = 0
             self.level += 1
-
