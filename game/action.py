@@ -13,4 +13,22 @@ class Action(IntEnum):
 
     @staticmethod
     def sample():
-        return random.choice(range(0, 7))
+        # Não está sendo enviado a ação Hard Drop
+        return random.choice(range(0, 6))
+
+    @staticmethod
+    def display(action):
+        if action == 0:
+            print("L")
+        elif action == 1:
+            print("R")
+        elif action == 2:
+            print("RL")
+        elif action == 3:
+            print("RR")
+        elif action == 4:
+            print("S")
+        elif action == 5:
+            print("D")
+        elif action == 6:
+            print("H")

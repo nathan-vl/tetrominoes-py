@@ -97,6 +97,30 @@ class Board:
                 break
         return altura
 
+    def calc_holes(self):
+        holes = 0
+
+        for col in zip(*self.current_state()):
+            i = 0
+            while i < Board.HEIGHT and col[i] == 0:
+                i += 1
+            holes += len([x for x in col[i + 1 :] if x == 0])
+
+        return holes
+
+    def calc_bumpiness(self):
+        total = 0
+
+        min_ys = []
+        for col in zip(*self.current_state()):
+            i = 0
+            while i < Board.HEIGHT and col[i] == 0:
+                i += 1
+            min_ys.append(i)
+        for i in range(len(min_ys) - 1):
+            total += abs(min_ys[i] - min_ys[i + 1])
+        return total
+
     def move_left(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.move_relative(Vec2(-1, 0))
@@ -141,19 +165,27 @@ class Board:
         points = 0
 
         if self.check_collision(tetromino_copy):
-            self.lock_current_in_matrix()
+            lock_points = self.lock_current_in_matrix()
+            if lock_points is None:
+                return None
+            points += lock_points
         else:
             self.did_turn_last_move = False
             self.did_turn_move_2_side_1_down = False
             self.current = tetromino_copy
-            points = self.add_drop_score(ScoreType.SoftDrop, 1)
+            points += self.add_drop_score(ScoreType.SoftDrop, 1)
         return points
 
     def hard_drop(self):
         height = self.ghost_current().origin.y - self.current.origin.y
         self.current = self.ghost_current()
-        self.lock_current_in_matrix()
-        return self.add_drop_score(ScoreType.HardDrop, height)
+        points = 0
+        lock_points = self.lock_current_in_matrix()
+        if lock_points is None:
+            return None
+        points += lock_points
+        points += self.add_drop_score(ScoreType.HardDrop, height)
+        return points
 
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
@@ -172,13 +204,22 @@ class Board:
             self.current = tetromino_copy
 
     def step(self, action):
+        points = 0
         reward = 0
         terminated = False
 
         if action == Action.SoftDrop:
-            reward += self.soft_drop()
+            lock_points = self.soft_drop()
+            if lock_points is None:
+                terminated = True
+            else:
+                points += lock_points
         elif action == Action.HardDrop:
-            reward += self.hard_drop()
+            lock_points = self.hard_drop()
+            if lock_points is None:
+                terminated = True
+            else:
+                points += lock_points
         else:
             if action == Action.RotateLeft:
                 self.try_turn_current(Direction.Left)
@@ -194,15 +235,20 @@ class Board:
             tetromino_copy.fall()
 
             if self.check_collision(tetromino_copy):
-                reward = self.lock_current_in_matrix()
-                terminated = reward == -1
-            
-            if(terminated == False):
+                lock_points = self.lock_current_in_matrix()
+                if lock_points is None:
+                    terminated = True
+                else:
+                    points += lock_points
+
+            if terminated == False:
                 reward -= self.calcular_altura()
-            
+                reward -= self.calc_holes()
+                reward -= self.calc_bumpiness()
+
         self.tick()
 
-        return self.current_state(), reward, terminated
+        return self.current_state(), points, reward, terminated
 
     def update(self, dt):
         tetromino_copy = copy.deepcopy(self.current)
@@ -232,7 +278,7 @@ class Board:
     def lock_current_in_matrix(self):
         if self.check_collision(self.current):
             # print(f"Fim de jogo. Pontuação: {self.score}")
-            return -1
+            return None
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
@@ -291,7 +337,7 @@ class Board:
 
     def get_t_piece_back_minoes(self):
         if self.current.rotation == Rotation.Origin:
-            if self.current.origin.y == 0:
+            if self.current.origin.y == (Board.HEIGHT - 1):
                 return ["white", "white"]
             return [
                 self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
@@ -312,7 +358,7 @@ class Board:
                 self.matrix[self.current.origin.y + 1][self.current.origin.x - 1],
             ]
         else:
-            if self.current.origin.y == (Board.HEIGHT - 1):
+            if self.current.origin.y == 0:
                 return ["white", "white"]
             return [
                 self.matrix[self.current.origin.y - 1][self.current.origin.x - 1],
@@ -435,6 +481,13 @@ class Board:
 
         return state
 
+    def display_current_state(self):
+        state = self.current_state()
+        for row in state:
+            str_row = "".join(map(str, row))
+            print(str_row)
+        print()
+
     def add_drop_score(self, score_type, cells):
         sum = 0
         if score_type == ScoreType.SoftDrop:
@@ -451,13 +504,13 @@ class Board:
         return sum
 
     def get_game_score(self):
-        '''Returns the current game score.
+        """Returns the current game score.
 
         Each block placed counts as one.
         For lines cleared, it is used BOARD_WIDTH * lines_cleared ^ 2.
-        '''
+        """
         return self.score
-    
+
     def get_state_size(self):
-        '''Size of the state'''
+        """Size of the state"""
         return 4

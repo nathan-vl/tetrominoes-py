@@ -24,15 +24,15 @@ device = torch.device(
 )
 
 # Hyperparameters
-BATCH_SIZE = 128
+BATCH_SIZE = 50
 GAMMA = 0.99
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 1000
+EPS_DECAY = 10000
 TAU = 0.005
 LR = 1e-4
 
-n_actions = 7
+n_actions = 6
 n_observations = 200
 
 policy_net = NeuralNetwork(n_observations, n_actions).to(device)
@@ -50,6 +50,8 @@ if is_ipython:
     from IPython import display
 
 episode_durations = []
+
+
 def plot_durations(show_result=False):
     plt.figure(1)
     durations_t = torch.tensor(episode_durations, dtype=torch.float)
@@ -74,6 +76,7 @@ def plot_durations(show_result=False):
             display.clear_output(wait=True)
         else:
             display.display(plt.gcf())
+
 
 def select_action(state):
     global steps_done
@@ -133,13 +136,19 @@ def optimize_model():
 num_episodes = 10000
 
 for i_episode in range(num_episodes):
+    # print(f"=== Begin {i_episode} ===")
+
     board = Board()
     state = board.current_state()
     state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
 
+    total_score = 0
     for t in count():
         action = select_action(state)
-        observation, reward, terminated = board.step(action.item())
+        # Action.display(int(action[0][0]))
+        observation, points, reward, terminated = board.step(action.item())
+        total_score += points
+        # board.display_current_state()
         reward = torch.tensor([reward], device=device)
 
         if terminated:
@@ -165,7 +174,7 @@ for i_episode in range(num_episodes):
         target_net.load_state_dict(target_net_state_dict)
 
         if terminated:
-            print(f'{i_episode}: {t}')
-            episode_durations.append(t + 1)
+            print(f"{i_episode}: {t} ({total_score})")
+            episode_durations.append(total_score)
             plot_durations()
             break
