@@ -85,6 +85,18 @@ class Board:
 
         return None
 
+    def calcular_altura(self):
+        matriz = self.current_state()
+        altura = 0
+        for linha in range(20):
+            for coluna in range(10):
+                if matriz[linha][coluna] == 1:
+                    altura = len(matriz) - linha
+                    break
+            if altura != 0:
+                break
+        return altura
+
     def move_left(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.move_relative(Vec2(-1, 0))
@@ -183,8 +195,11 @@ class Board:
 
             if self.check_collision(tetromino_copy):
                 reward = self.lock_current_in_matrix()
-                terminated = reward == -1000
-
+                terminated = reward == -1
+            
+            if(terminated == False):
+                reward -= self.calcular_altura()
+            
         self.tick()
 
         return self.current_state(), reward, terminated
@@ -192,7 +207,6 @@ class Board:
     def update(self, dt):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
-
         if self.check_collision(tetromino_copy):
             self.fall_dt += dt
             if (self.fall_dt > Board.LOCK_DELAY_MS) or (
@@ -218,7 +232,7 @@ class Board:
     def lock_current_in_matrix(self):
         if self.check_collision(self.current):
             # print(f"Fim de jogo. Pontuação: {self.score}")
-            return -1000
+            return -1
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
@@ -245,7 +259,7 @@ class Board:
                 for _ in range(Board.HEIGHT - len(new_matrix))
             ] + new_matrix
         self.matrix = new_matrix
-        return points
+        return lines_cleared**2
 
     def full_row(self, row):
         for tile in row:
@@ -435,3 +449,15 @@ class Board:
             self.score_level = 0
             self.level += 1
         return sum
+
+    def get_game_score(self):
+        '''Returns the current game score.
+
+        Each block placed counts as one.
+        For lines cleared, it is used BOARD_WIDTH * lines_cleared ^ 2.
+        '''
+        return self.score
+    
+    def get_state_size(self):
+        '''Size of the state'''
+        return 4
