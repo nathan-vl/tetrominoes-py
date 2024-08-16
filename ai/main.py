@@ -106,8 +106,8 @@ for i_episode in range(num_episodes):
             device=device,
         ).unsqueeze(0)
         action = torch.tensor([action], device=device).unsqueeze(0)
-        reward = torch.tensor([reward], device=device)
-        terminated = torch.tensor([terminated], device=device)
+        reward = torch.tensor([reward], device=device).unsqueeze(0)
+        terminated = torch.tensor([terminated], device=device).unsqueeze(0)
         agent.add_memory(state, action, next_state, reward, terminated)
 
         agent.train()

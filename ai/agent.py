@@ -87,16 +87,19 @@ class TetrominoesAgent:
         )
 
     def estimate(self, state, action):
-        return self.neural_network(state)[np.arange(0, self.batch_size), action]
+        current = self.neural_network(state)[np.arange(0, self.batch_size), action]
+        return current
 
     @torch.no_grad
     def target(self, reward, next_state, terminated):
         next_state_q = self.neural_network(next_state)
         best_action = torch.argmax(next_state_q, 1)
         next = self.neural_network(next_state, target=True)[
-            np.arange(0, self.batch_size), best_action
+            np.arange(0, self.batch_size),
+            best_action,
         ]
-        return (reward + (1 - terminated.float()) * self.discount * next).float()
+        target = (reward + (1 - terminated.float()) * self.discount * next).float()
+        return target
 
     def update_q(self, estimate, target):
         loss = self.loss_fn(estimate, target)
