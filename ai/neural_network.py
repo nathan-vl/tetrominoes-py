@@ -31,7 +31,7 @@ class NeuralNetwork(nn.Module):
         # Hiperparâmetros
         self.EPSILON = 1
         self.EPSILON_MIN = 0
-        self.EPSILON_STOP_EP = 5000
+        self.EPSILON_STOP_EP = 50
         self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
 
     def forward(self, x):
