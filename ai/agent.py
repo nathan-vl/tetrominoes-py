@@ -2,6 +2,7 @@ import random
 import torch
 import torch.optim as optim
 import torch.nn as nn
+import numpy as np
 
 from ai.memory import Memory
 from ai.neural_network import NeuralNetwork
@@ -10,19 +11,24 @@ from game.action import Action
 
 
 class TetrominoesAgent:
-    def __init__(self, device, discount=0.99, lr=1e-4):
+    def __init__(self, device, discount=0.99, lr=1e-4, batch_size=32):
         self.neural_network = NeuralNetwork(200, 7)
 
         self.memory = Memory(10000)
 
         self.device = device
         self.discount = discount
-        self.optimizer = optim.AdamW(self.neural_network.parameters(), lr=lr, amsgrad=True)
+        self.optimizer = optim.AdamW(
+            self.neural_network.parameters(), lr=lr, amsgrad=True
+        )
+
+        self.loss_fn = nn.SmoothL1Loss()
 
         # Hiperparâmetros
+        self.batch_size = batch_size
         self.EPSILON = 1
         self.EPSILON_MIN = 0
-        self.EPSILON_STOP_EP = 50
+        self.EPSILON_STOP_EP = 200
         self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
 
     def add_memory(self, *args):
@@ -57,47 +63,57 @@ class TetrominoesAgent:
         with torch.no_grad():
             return self.neural_network(state).max(1).indices.view(1, 1)
 
-    def estimate(self, state, action):
-        return self.neural_network(state, model="online")[torch.zeros(50), action]
-
-    def train(self, batch_size=50):
-        if len(self.memory) < batch_size:
-            return
-
-        transitions = self.memory.sample(batch_size)
+    def recall(self):
+        transitions = self.memory.sample(self.batch_size)
         batch = Transition(*zip(*transitions))
-
-        non_final_mask = torch.tensor(
-            tuple(map(lambda s: s is not None, batch.next_state)),
-            device=self.device,
-            dtype=torch.bool,
-        )
-        non_final_next_states = torch.cat(
-            [s for s in batch.next_state if s is not None]
-        )
 
         state_batch = torch.cat(batch.state)
         action_batch = torch.cat(batch.action)
         reward_batch = torch.cat(batch.reward)
+        next_state_batch = torch.cat(batch.next_state)
+        terminated_batch = torch.cat(batch.terminated)
 
-        state_action_values = self.neural_network(state_batch).gather(1, action_batch)
-        next_state_values = torch.zeros(batch_size, device=self.device)
+        return (
+            state_batch,
+            action_batch,
+            reward_batch,
+            next_state_batch,
+            terminated_batch,
+        )
 
-        # with torch.no_grad():
-        #     next_state_values[non_final_mask] = (
-        #         target_net(non_final_next_states).max(1).values
-        #     )
-        # expected_state_action_values = (
-        #     next_state_values * self.discount
-        # ) + reward_batch
+    def estimate(self, state, action):
+        return self.neural_network(state)[np.arange(0, self.batch_size), action]
 
-        # criterion = nn.SmoothL1Loss()
-        # loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+    @torch.no_grad
+    def target(self, reward, next_state, terminated):
+        next_state_q = self.neural_network(next_state)
+        best_action = torch.argmax(next_state_q, 1)
+        next = self.neural_network(next_state, target=True)[
+            np.arange(0, self.batch_size), best_action
+        ]
+        return (reward + (1 - terminated.float()) * self.discount * next).float()
 
-        # self.optimizer.zero_grad()
-        # loss.backward()
-        # torch.nn.utils.clip_grad_value_(self.parameters(), 100)
-        # self.optimizer.step()
+    def update_q(self, estimate, target):
+        loss = self.loss_fn(estimate, target)
 
-        if self.EPSILON > self.EPSILON_MIN:
-            self.EPSILON -= self.epsilon_decay
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+
+    def train(self):
+        if len(self.memory) < self.batch_size:
+            return
+
+        state, action, reward, next_state, terminated = self.recall()
+
+        estimate = self.estimate(state, action)
+        target = self.target(reward, next_state, terminated)
+
+        print(estimate.size())
+        print(target.size())
+        print()
+
+        loss = self.update_q(estimate, target)
+
+        return (estimate.mean().item(), loss)

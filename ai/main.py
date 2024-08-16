@@ -67,7 +67,6 @@ for i_episode in range(num_episodes):
     for t in count():
         next_states = board.get_next_states()
         if len(next_states) == 0:
-            print(f"{i_episode}: {t} ({total_score})")
             episode_durations.append(total_score)
             plot_durations()
             break
@@ -80,7 +79,6 @@ for i_episode in range(num_episodes):
                 break
 
         observation, points, reward, terminated = board.step(best_action)
-        print(points)
 
         """
         As vezes a IA aprende como utilizar o sistema de giro de forma a não
@@ -102,24 +100,25 @@ for i_episode in range(num_episodes):
                 observation, dtype=torch.float32, device=device
             ).unsqueeze(0)
 
-        state = torch.tensor(best_state, dtype=torch.float32, device=device).unsqueeze(
-            0
-        )
+        state = torch.tensor(
+            best_state,
+            dtype=torch.float32,
+            device=device,
+        ).unsqueeze(0)
         action = torch.tensor([action], device=device).unsqueeze(0)
         reward = torch.tensor([reward], device=device)
-        agent.add_memory(state, action, next_state, reward)
+        terminated = torch.tensor([terminated], device=device)
+        agent.add_memory(state, action, next_state, reward, terminated)
 
-        board.display_current_state()
+        agent.train()
 
         if terminated:
-            print(f"{i_episode}: {t} ({total_score})")
             episode_durations.append(total_score)
             plot_durations()
             break
         if no_score_delta >= no_score_delta_limit:
-            print(f"{i_episode}: {t} ({total_score})")
             episode_durations.append(total_score)
             plot_durations()
             break
-
-    agent.train()
+    if agent.EPSILON > agent.EPSILON_MIN:
+        agent.EPSILON -= agent.epsilon_decay
