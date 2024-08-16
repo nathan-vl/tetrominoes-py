@@ -4,6 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import torch
 
+from ai.agent import TetrominoesAgent
 from game.board import Board
 from .neural_network import NeuralNetwork
 
@@ -16,7 +17,7 @@ device = torch.device(
 
 n_actions = 7
 n_observations = 200
-agent = NeuralNetwork(device, n_observations, n_actions).to(device)
+agent = TetrominoesAgent(device)
 
 steps_done = 0
 
