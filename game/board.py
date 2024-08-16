@@ -231,9 +231,9 @@ class Board:
                 self.move_left()
             elif action == Action.Right:
                 self.move_right()
+
             tetromino_copy = copy.deepcopy(self.current)
             tetromino_copy.fall()
-
             if self.check_collision(tetromino_copy):
                 lock_points = self.lock_current_in_matrix()
                 if lock_points is None:
@@ -241,7 +241,7 @@ class Board:
                 else:
                     points += lock_points
 
-            if terminated == False:
+            if not terminated:
                 reward -= self.calcular_altura()
                 reward -= self.calc_holes()
                 reward -= self.calc_bumpiness()
@@ -276,9 +276,9 @@ class Board:
             self.tick()
 
     def lock_current_in_matrix(self):
-        if self.check_collision(self.current):
-            # print(f"Fim de jogo. Pontuação: {self.score}")
-            return None
+        # if self.check_collision(self.current):
+        # print(f"Fim de jogo. Pontuação: {self.score}")
+        # return None
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
@@ -286,6 +286,13 @@ class Board:
 
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
+
+        tetromino_copy = copy.deepcopy(self.current)
+        tetromino_copy.fall()
+        if self.check_collision(tetromino_copy):
+            # print(f"Fim de jogo. Pontuação: {self.score}")
+            return None
+
         self.did_swap_current_piece = False
         self.did_turn_last_move = False
         self.did_turn_move_2_side_1_down = False
@@ -481,6 +488,23 @@ class Board:
 
         return state
 
+    def get_next_states(self):
+        states = {}
+        for action in [
+            Action.Left,
+            Action.Right,
+            Action.RotateLeft,
+            Action.RotateRight,
+            Action.Switch,
+            Action.SoftDrop,
+            Action.HardDrop,
+        ]:
+            copy_board = copy.deepcopy(self)
+            state, _, _, terminated = copy_board.step(action)
+            if not terminated:
+                states[action] = state
+        return states
+
     def display_current_state(self):
         state = self.current_state()
         for row in state:
@@ -504,13 +528,7 @@ class Board:
         return sum
 
     def get_game_score(self):
-        """Returns the current game score.
-
-        Each block placed counts as one.
-        For lines cleared, it is used BOARD_WIDTH * lines_cleared ^ 2.
-        """
         return self.score
 
     def get_state_size(self):
-        """Size of the state"""
         return 4
