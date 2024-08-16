@@ -12,14 +12,16 @@ from game.action import Action
 
 class TetrominoesAgent:
     def __init__(self, device, discount=0.99, lr=1e-4, batch_size=32):
-        self.neural_network = NeuralNetwork(200, 7)
+        self.neural_network = NeuralNetwork(200, 7).to(device)
 
         self.memory = Memory(10000)
 
         self.device = device
         self.discount = discount
         self.optimizer = optim.AdamW(
-            self.neural_network.parameters(), lr=lr, amsgrad=True
+            self.neural_network.parameters(),
+            lr=lr,
+            amsgrad=True,
         )
 
         self.loss_fn = nn.SmoothL1Loss()
@@ -44,7 +46,9 @@ class TetrominoesAgent:
             score = (
                 self.neural_network(
                     torch.tensor(
-                        state, dtype=torch.float32, device=self.device
+                        state,
+                        dtype=torch.float32,
+                        device=self.device,
                     ).unsqueeze(0)
                 )
                 .max(1)
@@ -58,7 +62,8 @@ class TetrominoesAgent:
     def select_action(self, state):
         if random.random() <= self.EPSILON:
             return torch.tensor(
-                [[Action.sample()]], device=self.device, dtype=torch.long
+                [[Action.sample()]],
+                device=self.device,
             )
         with torch.no_grad():
             return self.neural_network(state).max(1).indices.view(1, 1)
@@ -109,11 +114,6 @@ class TetrominoesAgent:
 
         estimate = self.estimate(state, action)
         target = self.target(reward, next_state, terminated)
-
-        print(estimate.size())
-        print(target.size())
-        print()
-
         loss = self.update_q(estimate, target)
 
         return (estimate.mean().item(), loss)
