@@ -9,7 +9,7 @@ from game.action import Action
 
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, n_observations, n_actions, discount=0.99, lr=1e-4):
+    def __init__(self, device, n_observations, n_actions, discount=0.99, lr=1e-4):
         super().__init__()
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
@@ -24,6 +24,7 @@ class NeuralNetwork(nn.Module):
             nn.Linear(32, n_actions),
         )
 
+        self.device = device
         self.discount = discount
         self.memory = Memory(10000)
         self.optimizer = optim.AdamW(self.parameters(), lr=lr, amsgrad=True)
@@ -49,19 +50,26 @@ class NeuralNetwork(nn.Module):
         max_score_state = None
         best_state = None
         for state in states:
-            score = self(torch.tensor(state, dtype=torch.float32).unsqueeze(0)).max(1).indices.view(1, 1)
+            score = (
+                self(torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0))
+                .max(1)
+                .indices.view(1, 1)
+            )
             if max_score_state is None or score > max_score_state:
                 max_score_state = score
                 best_state = state
         return best_state
 
-    def select_action(self, device, state):
+    def select_action(self, state):
         if random.random() <= self.EPSILON:
-            return torch.tensor([[Action.sample()]], device=device, dtype=torch.long)
+            return torch.tensor([[Action.sample()]], device=self.device, dtype=torch.long)
         with torch.no_grad():
             return self(state).max(1).indices.view(1, 1)
 
-    def train(self, device, batch_size=50):
+    def estimate(self, state, action):
+        return self.net(state, model="online")[torch.zeros(50), action]
+
+    def train(self, batch_size=50):
         if len(self.memory) < batch_size:
             return
 
@@ -70,7 +78,7 @@ class NeuralNetwork(nn.Module):
 
         non_final_mask = torch.tensor(
             tuple(map(lambda s: s is not None, batch.next_state)),
-            device=device,
+            device=self.device,
             dtype=torch.bool,
         )
         non_final_next_states = torch.cat(
@@ -82,7 +90,7 @@ class NeuralNetwork(nn.Module):
         reward_batch = torch.cat(batch.reward)
 
         state_action_values = self(state_batch).gather(1, action_batch)
-        next_state_values = torch.zeros(batch_size, device=device)
+        next_state_values = torch.zeros(batch_size, device=self.device)
 
         # with torch.no_grad():
         #     next_state_values[non_final_mask] = (

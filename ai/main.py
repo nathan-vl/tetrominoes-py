@@ -16,7 +16,7 @@ device = torch.device(
 
 n_actions = 7
 n_observations = 200
-agent = NeuralNetwork(n_observations, n_actions).to(device)
+agent = NeuralNetwork(device, n_observations, n_actions).to(device)
 
 steps_done = 0
 
@@ -121,4 +121,4 @@ for i_episode in range(num_episodes):
             plot_durations()
             break
 
-    agent.train(device)
+    agent.train()

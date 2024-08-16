@@ -245,8 +245,7 @@ class Board:
                 reward -= self.calcular_altura()
                 reward -= self.calc_holes()
                 reward -= self.calc_bumpiness()
-
-        self.tick()
+                self.tick()
 
         return self.current_state(), points, reward, terminated
 
