@@ -61,6 +61,7 @@ class Board:
         self.last_score_type = ""
         self.score_alpha = 0
         self.combo = 0
+        self.terminated = False
 
     def try_turn_current(self, direction):
         new_rotation = Rotation.rotate(self.current.rotation, direction)
@@ -174,6 +175,7 @@ class Board:
             self.did_turn_move_2_side_1_down = False
             self.current = tetromino_copy
             points += self.add_drop_score(ScoreType.SoftDrop, 1)
+            
         return points
 
     def hard_drop(self):
@@ -250,17 +252,23 @@ class Board:
         return self.current_state(), points, reward, terminated
 
     def update(self, dt):
+        terminated = False
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
+        
         if self.check_collision(tetromino_copy):
             self.fall_dt += dt
             if (self.fall_dt > Board.LOCK_DELAY_MS) or (
                 self.fall_move_dt > Board.MOVE_LOCK_DELAY_LIMIT
             ):
-                self.lock_current_in_matrix()
+                lock_points = self.lock_current_in_matrix()
+                if lock_points == None:
+                    terminated = True
+                    return terminated
         else:
             self.fall_dt = 0
             self.fall_move_dt = 0
+
 
         time = pygame.time.get_ticks()
 
@@ -273,6 +281,8 @@ class Board:
         ) ** (self.level - 1):
             self.last_tick_ms = time
             self.tick()
+            
+        return terminated
 
     def lock_current_in_matrix(self):
         if self.check_collision(self.current):
@@ -528,6 +538,3 @@ class Board:
 
     def get_game_score(self):
         return self.score
-
-    def get_state_size(self):
-        return 4

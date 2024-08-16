@@ -62,8 +62,11 @@ def main():
         screen.blit(score_surface, (5, 5))
         pygame.display.flip()
 
-        board.update(dt)
+        result = board.update(dt)
 
+        if result:
+            break 
+        
         dt = clock.tick(FPS)
 
     pygame.quit()
