@@ -33,6 +33,9 @@ class TetrominoesAgent:
         self.EPSILON_STOP_EP = 300
         self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
 
+        self.curr_step = 0
+        self.sync_time = 10
+
     def add_memory(self, *args):
         self.memory.push(*args)
 
@@ -60,6 +63,8 @@ class TetrominoesAgent:
         return best_state
 
     def select_action(self, state):
+        self.curr_step += 1
+
         if random.random() <= self.EPSILON:
             return torch.tensor(
                 [[Action.sample()]],
@@ -109,9 +114,17 @@ class TetrominoesAgent:
         self.optimizer.step()
         return loss.item()
 
+    def sync_target(self):
+        self.neural_network.target.load_state_dict(
+            self.neural_network.linear_relu_stack.state_dict()
+        )
+
     def train(self):
         if len(self.memory) < self.batch_size:
             return
+
+        if self.curr_step % self.sync_time == 0:
+            self.sync_target()
 
         state, action, reward, next_state, terminated = self.recall()
 
