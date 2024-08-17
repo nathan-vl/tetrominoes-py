@@ -103,7 +103,7 @@ class Board:
 
         for col in zip(*self.current_state()):
             i = 0
-            while i < Board.HEIGHT and col[i] == 0:
+            while i < Board.HEIGHT and col[i] != 1:
                 i += 1
             holes += len([x for x in col[i + 1 :] if x == 0])
 
@@ -115,7 +115,7 @@ class Board:
         min_ys = []
         for col in zip(*self.current_state()):
             i = 0
-            while i < Board.HEIGHT and col[i] == 0:
+            while i < Board.HEIGHT and col[i] != 1:
                 i += 1
             min_ys.append(i)
         for i in range(len(min_ys) - 1):

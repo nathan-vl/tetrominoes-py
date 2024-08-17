@@ -6,7 +6,6 @@ import torch
 
 from ai.agent import TetrominoesAgent
 from game.board import Board
-from .neural_network import NeuralNetwork
 
 
 device = torch.device(
@@ -65,6 +64,7 @@ for i_episode in range(num_episodes):
     no_score_delta_limit = 1000
 
     for t in count():
+        # board.display_current_state()
         next_states = board.get_next_states()
         if len(next_states) == 0:
             episode_durations.append(total_score)
@@ -79,7 +79,7 @@ for i_episode in range(num_episodes):
                 break
 
         observation, points, reward, terminated = board.step(best_action)
-        
+        # print(reward)
 
         """
         As vezes a IA aprende como utilizar o sistema de giro de forma a não
@@ -93,7 +93,7 @@ for i_episode in range(num_episodes):
             no_score_delta = 0
 
         total_score += points
-        
+
         reward = torch.tensor([reward], device=device)
         next_state = None
         if not terminated:
@@ -121,8 +121,6 @@ for i_episode in range(num_episodes):
             episode_durations.append(board.get_game_score())
             plot_durations()
             break
-    board.display_current_state()
 
     if agent.EPSILON > agent.EPSILON_MIN:
         agent.EPSILON -= agent.epsilon_decay
-    
