@@ -164,11 +164,11 @@ class Board:
         tetromino_copy.fall()
 
         points = 0
-
+        lines = 0
         if self.check_collision(tetromino_copy):
-            lock_points = self.lock_current_in_matrix()
+            lines, lock_points = self.lock_current_in_matrix()
             if lock_points is None:
-                return None
+                return lines, None
             points += lock_points
         else:
             self.did_turn_last_move = False
@@ -176,18 +176,21 @@ class Board:
             self.current = tetromino_copy
             points += self.add_drop_score(ScoreType.SoftDrop, 1)
             
-        return points
+        return lines, points
 
     def hard_drop(self):
         height = self.ghost_current().origin.y - self.current.origin.y
         self.current = self.ghost_current()
         points = 0
-        lock_points = self.lock_current_in_matrix()
+        lines = 0
+        lock_lines, lock_points = self.lock_current_in_matrix()
+        if lock_lines is None:
+            lines = 0
         if lock_points is None:
-            return None
+            return lines, None
         points += lock_points
         points += self.add_drop_score(ScoreType.HardDrop, height)
-        return points
+        return lines, points
 
     def check_collision(self, tetromino):
         for pos in tetromino.positions:
@@ -211,16 +214,18 @@ class Board:
         terminated = False
 
         if action == Action.SoftDrop:
-            lock_points = self.soft_drop()
+            lock_lines, lock_points = self.soft_drop()
             if lock_points is None:
                 terminated = True
             else:
+                reward += 10*lock_lines
                 points += lock_points
         elif action == Action.HardDrop:
-            lock_points = self.hard_drop()
+            lock_lines, lock_points = self.hard_drop()
             if lock_points is None:
                 terminated = True
             else:
+                reward += 10*lock_lines
                 points += lock_points
         else:
             if action == Action.RotateLeft:
@@ -237,10 +242,11 @@ class Board:
             tetromino_copy = copy.deepcopy(self.current)
             tetromino_copy.fall()
             if self.check_collision(tetromino_copy):
-                lock_points = self.lock_current_in_matrix()
+                lock_lines, lock_points = self.lock_current_in_matrix()
                 if lock_points is None:
                     terminated = True
                 else:
+                    reward += 10*lock_lines
                     points += lock_points
 
             if not terminated:
@@ -248,7 +254,6 @@ class Board:
                 reward -= self.calc_holes()
                 reward -= self.calc_bumpiness()
                 self.tick()
-
         return self.current_state(), points, reward, terminated
 
     def update(self, dt):
@@ -261,7 +266,7 @@ class Board:
             if (self.fall_dt > Board.LOCK_DELAY_MS) or (
                 self.fall_move_dt > Board.MOVE_LOCK_DELAY_LIMIT
             ):
-                lock_points = self.lock_current_in_matrix()
+                lock_lines, lock_points = self.lock_current_in_matrix()
                 if lock_points == None:
                     terminated = True
                     return terminated
@@ -287,11 +292,11 @@ class Board:
     def lock_current_in_matrix(self):
         if self.check_collision(self.current):
             # print(f"Fim de jogo. Pontuação: {self.score}")
-            return None
+            return 0, None
         for pos in self.current.positions:
             self.matrix[int(pos.y)][int(pos.x)] = self.current.color
 
-        points = self.clear_rows()
+        lines, points = self.clear_rows()
 
         self.current = self.queue.next()
         self.current.move(Vec2((Board.WIDTH - 1) // 2, -1))
@@ -300,12 +305,12 @@ class Board:
         tetromino_copy.fall()
         if self.check_collision(tetromino_copy):
             # print(f"Fim de jogo. Pontuação: {self.score}")
-            return None
+            return 0, None
 
         self.did_swap_current_piece = False
         self.did_turn_last_move = False
         self.did_turn_move_2_side_1_down = False
-        return points
+        return lines, points
 
     def clear_rows(self):
         new_matrix = list(filter(lambda row: not self.full_row(row), self.matrix))
@@ -321,7 +326,7 @@ class Board:
                 for _ in range(Board.HEIGHT - len(new_matrix))
             ] + new_matrix
         self.matrix = new_matrix
-        return lines_cleared**2
+        return lines_cleared**2, points
 
     def full_row(self, row):
         for tile in row:

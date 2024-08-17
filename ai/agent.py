@@ -30,7 +30,7 @@ class TetrominoesAgent:
         self.batch_size = batch_size
         self.EPSILON = 1
         self.EPSILON_MIN = 0
-        self.EPSILON_STOP_EP = 200
+        self.EPSILON_STOP_EP = 50
         self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
 
     def add_memory(self, *args):
