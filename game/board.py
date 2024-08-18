@@ -1,5 +1,6 @@
 import copy
 from enum import IntEnum
+import math
 from game.action import Action
 from game.direction import Direction
 from game.utils import Vec2
@@ -122,6 +123,24 @@ class Board:
             total += abs(min_ys[i] - min_ys[i + 1])
         return total
 
+    def calc_median_height(self):
+        heights_sum = 0
+        for col in zip(*self.matrix):
+            for i in range(Board.HEIGHT - 1, -1, -1):
+                if col[i] is not None:
+                    heights_sum += i
+        return float(heights_sum) / Board.WIDTH
+
+    def calc_std_deviation_height(self):
+        median = self.calc_median_height()
+        heights_delta = 0
+        for col in zip(*self.matrix):
+            for i in range(Board.HEIGHT - 1, -1, -1):
+                if col[i] is not None:
+                    heights_delta += abs(i - median)
+        heights_delta = heights_delta / Board.WIDTH
+        return heights_delta
+
     def move_left(self):
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.move_relative(Vec2(-1, 0))
@@ -175,7 +194,7 @@ class Board:
             self.did_turn_move_2_side_1_down = False
             self.current = tetromino_copy
             points += self.add_drop_score(ScoreType.SoftDrop, 1)
-            
+
         return lines, points
 
     def hard_drop(self):
@@ -253,6 +272,7 @@ class Board:
                 reward -= self.calcular_altura()
                 reward -= self.calc_holes()
                 reward -= self.calc_bumpiness()
+                reward -= self.calc_std_deviation_height()
                 self.tick()
         return self.current_state(), points, reward, terminated
 
@@ -260,7 +280,7 @@ class Board:
         terminated = False
         tetromino_copy = copy.deepcopy(self.current)
         tetromino_copy.fall()
-        
+
         if self.check_collision(tetromino_copy):
             self.fall_dt += dt
             if (self.fall_dt > Board.LOCK_DELAY_MS) or (
@@ -274,7 +294,6 @@ class Board:
             self.fall_dt = 0
             self.fall_move_dt = 0
 
-
         time = pygame.time.get_ticks()
 
         if (time - self.last_tick_ms_score) > 600:
@@ -286,7 +305,7 @@ class Board:
         ) ** (self.level - 1):
             self.last_tick_ms = time
             self.tick()
-            
+
         return terminated
 
     def lock_current_in_matrix(self):
@@ -501,23 +520,6 @@ class Board:
                 state[int(pos.y)][int(pos.x)] = 2
 
         return state
-
-    def get_next_states(self):
-        states = {}
-        for action in [
-            Action.Left,
-            Action.Right,
-            Action.RotateLeft,
-            Action.RotateRight,
-            Action.Switch,
-            Action.SoftDrop,
-            Action.HardDrop,
-        ]:
-            copy_board = copy.deepcopy(self)
-            state, _, reward, terminated = copy_board.step(action)
-            if not terminated:
-                states[action] = (state, action, reward)
-        return states
 
     def display_current_state(self):
         state = self.current_state()

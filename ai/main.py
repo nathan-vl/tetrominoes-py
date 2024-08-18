@@ -23,6 +23,7 @@ if is_ipython:
 episode_scores = []
 episode_durations = []
 
+
 def plot_durations(show_result=False):
     plt.figure(1)
     scores_t = torch.tensor(episode_scores, dtype=torch.float)
@@ -64,17 +65,25 @@ for i_episode in range(num_episodes):
     no_score_delta_limit = 500
 
     for t in count():
-        # board.display_current_state()
-        next_states = board.get_next_states()
-        if len(next_states) == 0:
-            episode_scores.append(total_score)
-            episode_durations.append(t + 1)
-            plot_durations()
-            break
-        best_state, best_action, reward = agent.best_state([*next_states.values()])
+        state = board.current_state()
+        state = torch.tensor(
+            state,
+            dtype=torch.float32,
+            device=device,
+        ).unsqueeze(0)
 
-        observation, points, reward, terminated = board.step(best_action)
-        # print(reward)
+        action = agent.select_action(state)
+
+        observation, points, reward, terminated = board.step(action)
+
+        # action = torch.tensor([action], dtype=torch.int32, device=device).unsqueeze(0)
+        observation = torch.tensor(
+            observation, dtype=torch.float32, device=device
+        ).unsqueeze(0)
+        reward = torch.tensor([reward], device=device).unsqueeze(0)
+        terminated = torch.tensor([terminated], device=device).unsqueeze(0)
+        agent.add_memory(state, action, observation, reward, terminated)
+        # print(action[0][0].item(), end='')
 
         """
         As vezes a IA aprende como utilizar o sistema de giro de forma a não
@@ -89,25 +98,6 @@ for i_episode in range(num_episodes):
 
         total_score += points
 
-        reward = torch.tensor([reward], device=device)
-        next_state = None
-        if not terminated:
-            next_state = torch.tensor(
-                observation, dtype=torch.float32, device=device
-            ).unsqueeze(0)
-
-        state = torch.tensor(
-            best_state,
-            dtype=torch.float32,
-            device=device,
-        ).unsqueeze(0)
-        action = torch.tensor(
-            [best_action], dtype=torch.int32, device=device
-        ).unsqueeze(0)
-        reward = torch.tensor([reward], device=device).unsqueeze(0)
-        terminated = torch.tensor([terminated], device=device).unsqueeze(0)
-        agent.add_memory(state, action, next_state, reward, terminated)
-
         if terminated:
             episode_scores.append(board.get_game_score())
             episode_durations.append(t + 1)
@@ -118,9 +108,9 @@ for i_episode in range(num_episodes):
             episode_durations.append(t + 1)
             plot_durations()
             break
-
-    board.display_current_state()
-
+        board.display_current_state()
+    # print()
     agent.train()
+
     if agent.EPSILON > agent.EPSILON_MIN:
         agent.EPSILON -= agent.epsilon_decay
