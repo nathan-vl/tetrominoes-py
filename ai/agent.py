@@ -13,7 +13,7 @@ TAU = 0.005
 
 
 class TetrominoesAgent:
-    def __init__(self, device, discount=0.99, lr=1e-4, batch_size=100):
+    def __init__(self, device, discount=0.95, lr=1e-4, batch_size=100):
         self.neural_network = NeuralNetwork().to(device)
 
         self.memory = Memory(100000)
@@ -25,8 +25,6 @@ class TetrominoesAgent:
             lr=lr,
             amsgrad=True,
         )
-
-        self.loss_fn = nn.SmoothL1Loss()
 
         # Hiperparâmetros
         self.batch_size = batch_size
@@ -80,11 +78,13 @@ class TetrominoesAgent:
         target = (reward + (1 - terminated.float()) * self.discount * next).float()
         return target
 
-    def update_q(self, estimate, target):
-        loss = self.loss_fn(estimate, target)
+    def optimize(self, estimate, target):
+        criterion = nn.SmoothL1Loss()
+        loss = criterion(estimate, target)
 
         self.optimizer.zero_grad()
         loss.backward()
+
         torch.nn.utils.clip_grad_value_(
             self.neural_network.linear_relu_stack.parameters(), 100
         )
@@ -115,6 +115,6 @@ class TetrominoesAgent:
 
         estimate = self.estimate(state, action)
         target = self.target(reward, next_state, terminated)
-        loss = self.update_q(estimate, target)
+        loss = self.optimize(estimate, target)
 
         return (estimate.mean().item(), loss)
