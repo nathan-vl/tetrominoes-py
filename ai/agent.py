@@ -9,12 +9,14 @@ from ai.neural_network import NeuralNetwork
 from ai.utils import Transition
 from game.action import Action
 
+TAU = 0.5
+
 
 class TetrominoesAgent:
-    def __init__(self, device, discount=0.99, lr=1e-4, batch_size=32):
+    def __init__(self, device, discount=0.99, lr=1e-4, batch_size=50):
         self.neural_network = NeuralNetwork().to(device)
 
-        self.memory = Memory(10000)
+        self.memory = Memory(100000)
 
         self.device = device
         self.discount = discount
@@ -30,41 +32,24 @@ class TetrominoesAgent:
         self.batch_size = batch_size
         self.EPSILON = 1
         self.EPSILON_MIN = 0
-        self.EPSILON_STOP_EP = 300
+        self.EPSILON_STOP_EP = 250
         self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
-
-        self.curr_step = 0
-        self.sync_time = 10
 
     def add_memory(self, *args):
         self.memory.push(*args)
 
     def best_state(self, states):
-        if random.random() <= self.EPSILON:
-            return random.choice(states)
-
-        max_score_state = None
+        max_score_state = 0
         best_state = None
-        for state in states:
-            score = (
-                self.neural_network(
-                    torch.tensor(
-                        state,
-                        dtype=torch.float32,
-                        device=self.device,
-                    ).unsqueeze(0)
-                )
-                .max(1)
-                .indices.view(1, 1)
-            )
-            if max_score_state is None or score > max_score_state:
-                max_score_state = score
+        best_action = None
+        for state, action, reward in states:
+            if best_state is None or reward >= max_score_state:
+                max_score_state = reward
                 best_state = state
-        return best_state
+                best_action = action
+        return state, best_action, reward
 
     def select_action(self, state):
-        self.curr_step += 1
-
         if random.random() <= self.EPSILON:
             return torch.tensor(
                 [[Action.sample()]],
@@ -111,10 +96,22 @@ class TetrominoesAgent:
 
         self.optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_value_(
+            self.neural_network.linear_relu_stack.parameters(), 100
+        )
         self.optimizer.step()
         return loss.item()
 
     def sync_target(self):
+        current_net_state_dict = self.neural_network.linear_relu_stack.state_dict()
+        target_net_state_dict = self.neural_network.target.state_dict()
+
+        for key in current_net_state_dict:
+            target_net_state_dict[key] = current_net_state_dict[
+                key
+            ] * TAU + target_net_state_dict[key] * (1 - TAU)
+        self.neural_network.target.load_state_dict(target_net_state_dict)
+
         self.neural_network.target.load_state_dict(
             self.neural_network.linear_relu_stack.state_dict()
         )
@@ -123,8 +120,7 @@ class TetrominoesAgent:
         if len(self.memory) < self.batch_size:
             return
 
-        if self.curr_step % self.sync_time == 0:
-            self.sync_target()
+        self.sync_target()
 
         state, action, reward, next_state, terminated = self.recall()
 

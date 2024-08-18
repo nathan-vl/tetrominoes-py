@@ -218,14 +218,14 @@ class Board:
             if lock_points is None:
                 terminated = True
             else:
-                reward += 10*lock_lines
+                # reward += 10*lock_lines
                 points += lock_points
         elif action == Action.HardDrop:
             lock_lines, lock_points = self.hard_drop()
             if lock_points is None:
                 terminated = True
             else:
-                reward += 10*lock_lines
+                # reward += 10*lock_lines
                 points += lock_points
         else:
             if action == Action.RotateLeft:
@@ -246,7 +246,7 @@ class Board:
                 if lock_points is None:
                     terminated = True
                 else:
-                    reward += 10*lock_lines
+                    # reward += 10*lock_lines
                     points += lock_points
 
             if not terminated:
@@ -514,9 +514,9 @@ class Board:
             Action.HardDrop,
         ]:
             copy_board = copy.deepcopy(self)
-            state, _, _, terminated = copy_board.step(action)
+            state, _, reward, terminated = copy_board.step(action)
             if not terminated:
-                states[action] = state
+                states[action] = (state, action, reward)
         return states
 
     def display_current_state(self):
