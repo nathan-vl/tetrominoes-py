@@ -36,8 +36,10 @@ def plot_durations(show_result=False):
         plt.title("Training...")
     plt.xlabel("Episode")
     plt.ylabel("Duration")
-    plt.plot(scores_t.numpy(), color='green')
-    plt.plot(durations_t.numpy(), )
+    plt.plot(scores_t.numpy(), color="green")
+    plt.plot(
+        durations_t.numpy(),
+    )
 
     MEDIA_LENGTH = 50
     if len(scores_t) >= MEDIA_LENGTH:
@@ -75,6 +77,9 @@ for i_episode in range(num_episodes):
         action = agent.select_action(state)
 
         observation, points, reward, terminated = board.step(action)
+        if not terminated:
+            reward += 0.08 * t + 0.2 * points
+        print(reward)
 
         # action = torch.tensor([action], dtype=torch.int32, device=device).unsqueeze(0)
         observation = torch.tensor(
@@ -83,7 +88,7 @@ for i_episode in range(num_episodes):
         reward = torch.tensor([reward], device=device).unsqueeze(0)
         terminated = torch.tensor([terminated], device=device).unsqueeze(0)
         agent.add_memory(state, action, observation, reward, terminated)
-        # print(action[0][0].item(), end='')
+        # print(action[0][0].item(), end="")
 
         """
         As vezes a IA aprende como utilizar o sistema de giro de forma a não
@@ -108,10 +113,9 @@ for i_episode in range(num_episodes):
             episode_durations.append(t + 1)
             plot_durations()
             break
-        
-    board.display_current_state()
-    # print()
-    agent.train()
 
-    if agent.EPSILON > agent.EPSILON_MIN:
-        agent.EPSILON -= agent.epsilon_decay
+    # board.display_current_state()
+    print()
+    agent.train()
+    if agent.epsilon > agent.epsilon_min:
+        agent.epsilon -= agent.epsilon_decay

@@ -13,31 +13,37 @@ TAU = 0.005
 
 
 class TetrominoesAgent:
-    def __init__(self, device, discount=0.95, lr=1e-4, batch_size=512):
+    def __init__(
+        self,
+        device,
+        gamma=0.95,
+        lr=1e-4,
+        epsilon_min=0.01,
+        batch_size=50,
+    ):
         self.neural_network = NeuralNetwork().to(device)
 
         self.memory = Memory(100000)
 
         self.device = device
-        self.discount = discount
+        self.gamma = gamma
         self.optimizer = optim.AdamW(
             self.neural_network.parameters(),
             lr=lr,
-            amsgrad=True,
         )
 
         # Hiperparâmetros
         self.batch_size = batch_size
-        self.EPSILON = 1
-        self.EPSILON_MIN = 0
-        self.EPSILON_STOP_EP = 1000
-        self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
+        self.epsilon = 1
+        self.epsilon_min = epsilon_min
+        self.epsilon_decay_ep = 300
+        self.epsilon_decay = 1 / self.epsilon_decay_ep
 
     def add_memory(self, *args):
         self.memory.push(*args)
 
     def select_action(self, state):
-        if random.random() <= self.EPSILON:
+        if random.random() <= self.epsilon:
             return torch.tensor(
                 [[Action.sample()]],
                 device=self.device,
@@ -75,7 +81,7 @@ class TetrominoesAgent:
             np.arange(0, self.batch_size),
             best_action,
         ]
-        target = (reward + (1 - terminated.float()) * self.discount * next).float()
+        target = (reward + (1 - terminated.float()) * self.gamma * next).float()
         return target
 
     def optimize(self, estimate, target):

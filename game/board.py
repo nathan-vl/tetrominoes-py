@@ -131,14 +131,17 @@ class Board:
                     heights_sum += i
         return float(heights_sum) / Board.WIDTH
 
-    def calc_std_deviation_height(self):
-        median = self.calc_median_height()
-        heights_delta = 0
+    def calc_max_deviation_height(self):
+        max_height = Board.HEIGHT - 1
+        min_height = 0
         for col in zip(*self.matrix):
             for i in range(Board.HEIGHT - 1, -1, -1):
                 if col[i] is not None:
-                    heights_delta += abs(i - median)
-        heights_delta = heights_delta / Board.WIDTH
+                    if max_height is None or i > max_height:
+                        max_height = i
+                    if min_height is None or i < min_height:
+                        min_height = i
+        heights_delta = abs(max_height - min_height)
         return heights_delta
 
     def move_left(self):
@@ -267,18 +270,18 @@ class Board:
                     lines = lock_lines
                     points += lock_points
 
-        reward = 1 + (lines ** 2) * Board.WIDTH
+        reward = 1 + (lines**2) * Board.WIDTH
 
-        #print(f"Reward = {reward} - {0.51*self.calcular_altura()} - {0.36*self.calc_holes()} - {0.18*self.calc_bumpiness()}")
-        #reward -= 0.51*self.calcular_altura()
-        #reward -= 0.36*self.calc_holes()
-        #reward -= 0.18*self.calc_bumpiness()
-        #reward -= self.calc_std_deviation_height()
+        # print(f"Reward = {reward} - {0.51*self.calcular_altura()} - {0.36*self.calc_holes()} - {0.18*self.calc_bumpiness()}")
+        # reward -= 0.1 * self.calcular_altura()
+        # reward -= 0.36 * self.calc_holes()
+        # reward -= 0.18*self.calc_bumpiness()
+        reward -= 0.2 * self.calc_max_deviation_height()
 
         if not terminated:
             self.tick()
         else:
-            reward -= 2
+            reward = -1000
 
         return self.current_state(), points, reward, terminated
 

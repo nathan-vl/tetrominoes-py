@@ -13,4 +13,4 @@ class Action(IntEnum):
 
     @staticmethod
     def sample():
-        return random.choice(range(0, 5))
+        return random.choice(range(0, 7))
