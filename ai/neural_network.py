@@ -17,7 +17,7 @@ class NeuralNetwork(nn.Module):
             nn.Linear(32, 32),
             nn.ReLU(),
             # Out layer
-            nn.Linear(32, 7),
+            nn.Linear(32, 5),
         )
 
         self.target = copy.deepcopy(self.linear_relu_stack)

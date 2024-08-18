@@ -36,8 +36,8 @@ def plot_durations(show_result=False):
         plt.title("Training...")
     plt.xlabel("Episode")
     plt.ylabel("Duration")
-    plt.plot(scores_t.numpy())
-    plt.plot(durations_t.numpy())
+    plt.plot(scores_t.numpy(), color='green')
+    plt.plot(durations_t.numpy(), )
 
     MEDIA_LENGTH = 50
     if len(scores_t) >= MEDIA_LENGTH:
@@ -108,7 +108,8 @@ for i_episode in range(num_episodes):
             episode_durations.append(t + 1)
             plot_durations()
             break
-        board.display_current_state()
+        
+    board.display_current_state()
     # print()
     agent.train()
 

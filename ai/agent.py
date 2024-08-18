@@ -13,7 +13,7 @@ TAU = 0.005
 
 
 class TetrominoesAgent:
-    def __init__(self, device, discount=0.95, lr=1e-4, batch_size=100):
+    def __init__(self, device, discount=0.95, lr=1e-4, batch_size=512):
         self.neural_network = NeuralNetwork().to(device)
 
         self.memory = Memory(100000)
@@ -30,7 +30,7 @@ class TetrominoesAgent:
         self.batch_size = batch_size
         self.EPSILON = 1
         self.EPSILON_MIN = 0
-        self.EPSILON_STOP_EP = 200
+        self.EPSILON_STOP_EP = 1000
         self.epsilon_decay = (self.EPSILON - self.EPSILON_MIN) / self.EPSILON_STOP_EP
 
     def add_memory(self, *args):

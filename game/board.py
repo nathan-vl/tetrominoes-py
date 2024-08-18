@@ -97,7 +97,7 @@ class Board:
                     break
             if altura != 0:
                 break
-        return altura
+        return altura - 4
 
     def calc_holes(self):
         holes = 0
@@ -229,6 +229,7 @@ class Board:
 
     def step(self, action):
         points = 0
+        lines = 0
         reward = 0
         terminated = False
 
@@ -237,14 +238,12 @@ class Board:
             if lock_points is None:
                 terminated = True
             else:
-                # reward += 10*lock_lines
                 points += lock_points
         elif action == Action.HardDrop:
             lock_lines, lock_points = self.hard_drop()
             if lock_points is None:
                 terminated = True
             else:
-                # reward += 10*lock_lines
                 points += lock_points
         else:
             if action == Action.RotateLeft:
@@ -265,15 +264,22 @@ class Board:
                 if lock_points is None:
                     terminated = True
                 else:
-                    # reward += 10*lock_lines
+                    lines = lock_lines
                     points += lock_points
 
-            if not terminated:
-                reward -= self.calcular_altura()
-                reward -= self.calc_holes()
-                reward -= self.calc_bumpiness()
-                reward -= self.calc_std_deviation_height()
-                self.tick()
+        reward = 1 + (lines ** 2) * Board.WIDTH
+
+        #print(f"Reward = {reward} - {0.51*self.calcular_altura()} - {0.36*self.calc_holes()} - {0.18*self.calc_bumpiness()}")
+        #reward -= 0.51*self.calcular_altura()
+        #reward -= 0.36*self.calc_holes()
+        #reward -= 0.18*self.calc_bumpiness()
+        #reward -= self.calc_std_deviation_height()
+
+        if not terminated:
+            self.tick()
+        else:
+            reward -= 2
+
         return self.current_state(), points, reward, terminated
 
     def update(self, dt):
